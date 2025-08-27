@@ -1,8 +1,8 @@
-import type { Product } from "./Brand";
+import type { BrandProduct } from "./Brand";
 
 export interface BrandModalProps {
     isOpen: boolean;
     onClose: () => void;
-    product: Product | null;
+    product: BrandProduct | null;
     onSubmit: (bidAmount: number) => void;
 }

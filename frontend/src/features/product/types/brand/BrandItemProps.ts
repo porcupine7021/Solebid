@@ -1,6 +1,6 @@
-import type { Product } from "./Brand";
+import type { BrandProduct } from "./Brand";
 
 export interface BrandItemProps {
-    product: Product;
-    onBidClick: (product: Product) => void;
+    product: BrandProduct;
+    onBidClick: (product: BrandProduct) => void;
 }
