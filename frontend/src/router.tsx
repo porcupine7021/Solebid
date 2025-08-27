@@ -19,11 +19,12 @@ import Signup from "./features/user/pages/Signup.tsx";
 
 import ChargePointsPage from './features/payment/pages/ChargePointsPage.tsx';
 import ChargeResultPage from './features/payment/pages/ChargeResultPage.tsx';
+import AppLayout from './components/AppLayout';
 
 
 const router = createBrowserRouter(
     createRoutesFromElements(
-        <Route>
+        <Route element={<AppLayout />}>
             <Route path="/" element={<MainPage />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
