@@ -1,4 +1,10 @@
-export interface Product {
+export interface Brand {
+    id: number;
+    name: string;
+    logo: string;
+}
+
+export interface BrandProduct {
     id: number;
     name: string;
     image: string;
@@ -7,15 +13,9 @@ export interface Product {
     bidders: number;
 }
 
-export interface Brand {
-    id: number;
-    name: string;
-    logo: string;
-}
-
 export interface BrandWithProducts {
     brand: string;
     description: string;
     logo: string;
-    products: Product[];
+    products: BrandProduct[];
 }

@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { BrandHeader, BrandList, BrandPopular } from "../components/Brand";
 import BrandModal from "../components/brand/BrandModal";
 import { brandProducts, popularBrands } from "../components/brand/mockData";
-import type { Product } from "../types/brand/Brand";
+import type { BrandProduct } from "../types/brand/Brand";
 
 const BrandPage = () => {
     const [showModal, setShowModal] = React.useState<boolean>(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<BrandProduct | null>(null);
 
-    const handleBidClick = (product: Product) => {
+    const handleBidClick = (product: BrandProduct) => {
         setSelectedProduct(product);
         setShowModal(true);
     };
