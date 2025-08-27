@@ -1,6 +1,6 @@
-import type { BrandWithProducts, Product } from "./Brand";
+import type { BrandWithProducts, BrandProduct } from "./Brand";
 
 export interface BrandListProps {
     brandData: BrandWithProducts;
-    onBidClick: (product: Product) => void;
+    onBidClick: (product: BrandProduct) => void;
 }
