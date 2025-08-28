@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,8 @@ public class UserService {
     private final SocialLoginRepository socialLoginRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    private static final long WITHDRAWAL_GRACE_DAYS = 30L;
 
     @Transactional
     public User signup(UserDto.SignupRequest requestDto) {
@@ -57,7 +60,11 @@ public class UserService {
         }
 
         if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-            throw new ReactivationRequiredException(user.getEmail());
+            if (isWithinGrace(user)) {
+                throw new ReactivationRequiredException(user.getEmail());
+            } else {
+                throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+            }
         }
 
         if (user.getUserStatus() != UserStatus.ACTIVE) {
@@ -122,7 +129,11 @@ public class UserService {
             user = socialLoginOptional.get().getUser();
             // 상태 체크: ACTIVE/BLOCKED/WITHDRAWN 분기
             if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-                throw new ReactivationRequiredException(user.getEmail());
+                if (isWithinGrace(user)) {
+                    throw new ReactivationRequiredException(user.getEmail());
+                } else {
+                    throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+                }
             }
             if (user.getUserStatus() != UserStatus.ACTIVE) {
                 throw new CustomException(ErrorCode.INACTIVE_USER);
@@ -139,7 +150,11 @@ public class UserService {
                 user = userOptional.get();
                 // 상태 체크: ACTIVE/BLOCKED/WITHDRAWN 분기
                 if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-                    throw new ReactivationRequiredException(user.getEmail());
+                    if (isWithinGrace(user)) {
+                        throw new ReactivationRequiredException(user.getEmail());
+                    } else {
+                        throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+                    }
                 }
                 if (user.getUserStatus() != UserStatus.ACTIVE) {
                     throw new CustomException(ErrorCode.INACTIVE_USER);
@@ -196,7 +211,11 @@ public class UserService {
             SocialLogin link = socialLoginOptional.get();
             user = link.getUser();
             if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-                throw new ReactivationRequiredException(user.getEmail());
+                if (isWithinGrace(user)) {
+                    throw new ReactivationRequiredException(user.getEmail());
+                } else {
+                    throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+                }
             }
             if (user.getUserStatus() != UserStatus.ACTIVE) {
                 throw new CustomException(ErrorCode.INACTIVE_USER);
@@ -209,7 +228,11 @@ public class UserService {
             if (userOptional.isPresent()) {
                 user = userOptional.get();
                 if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-                    throw new ReactivationRequiredException(user.getEmail());
+                    if (isWithinGrace(user)) {
+                        throw new ReactivationRequiredException(user.getEmail());
+                    } else {
+                        throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+                    }
                 }
                 if (user.getUserStatus() != UserStatus.ACTIVE) {
                     throw new CustomException(ErrorCode.INACTIVE_USER);
@@ -334,15 +357,25 @@ public class UserService {
         user.withdraw();
     }
 
-    // 계정 재활성화
+    // 계정 재활성화 (유예 기간 내에만 가능)
     @Transactional
     public User reactivateByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
         if (user.getUserStatus() == UserStatus.WITHDRAWN) {
-            userStatusToActive(user);
+            if (!isWithinGrace(user)) {
+                throw new CustomException(ErrorCode.WITHDRAWAL_GRACE_PERIOD_EXPIRED);
+            }
+            user.reactivate();
         }
         return user;
+    }
+
+    private boolean isWithinGrace(User user) {
+        if (user == null || user.getUserStatus() != UserStatus.WITHDRAWN) return false;
+        LocalDateTime at = user.getWithdrawnAt();
+        if (at == null) return false; // 과거 데이터: 안전하게 유예기간 만료로 간주
+        return LocalDateTime.now().isBefore(at.plusDays(WITHDRAWAL_GRACE_DAYS));
     }
 
     private void userStatusToActive(User user) {
