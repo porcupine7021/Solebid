@@ -1,6 +1,6 @@
 import type { CategoryHeaderProps } from "../../types/category/CategoryHeaderProps";
 
-const CategoryHeader: React.FC<CategoryHeaderProps> = ({ categoryName }) => {
+const CategoryHeader = ({ categoryName }: CategoryHeaderProps) => {
     return (
         <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">

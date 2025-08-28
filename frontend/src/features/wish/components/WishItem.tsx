@@ -1,10 +1,7 @@
 import { Link } from "react-router-dom";
-import type { WishItemProps } from "../../types/wish/WishItemProps";
+import type { WishItemProps } from "../types/WishItemProps";
 
-const WishItem: React.FC<WishItemProps> = ({
-    item,
-    onRemove,
-}) => (
+const WishItem = ({ item, onRemove }: WishItemProps) => (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
         <div className="relative">
             <img

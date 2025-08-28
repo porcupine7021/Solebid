@@ -1,6 +1,6 @@
 import type { PaginationProps } from "../types/PaginationProps";
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
     const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
     return (
         <div className="flex justify-center mt-8">

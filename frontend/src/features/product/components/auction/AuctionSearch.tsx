@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { AuctionSearchProps } from "../../types/auction/AuctionSearchProps";
 
-const AuctionSearch: React.FC<AuctionSearchProps> = ({
+const AuctionSearch = ({
     categories,
     selectedCategory,
     onCategoryChange,
@@ -10,7 +10,7 @@ const AuctionSearch: React.FC<AuctionSearchProps> = ({
     onSortChange,
     priceRange,
     onPriceChange,
-}) => {
+}: AuctionSearchProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     return (
         <div className="bg-white shadow-sm rounded-lg p-6 mb-8">

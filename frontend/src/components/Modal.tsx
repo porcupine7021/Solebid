@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import type { ModalProps } from "../types/ModalProps";
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     if (!isOpen) return null;
     return createPortal(
         <div

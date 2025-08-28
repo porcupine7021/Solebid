@@ -1,7 +1,7 @@
 import type { RankingTabProps } from "../../types/ranking/RankingTabProps";
 import { tabs } from "./mockData";
 
-const RankingTab: React.FC<RankingTabProps> = ({ activeTab, onTabClick }) => {
+const RankingTab = ({ activeTab, onTabClick }: RankingTabProps) => {
     return (
         <div className="flex space-x-4 border-b border-gray-200 mb-8">
             {tabs.map((tab) => (
