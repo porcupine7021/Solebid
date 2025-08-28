@@ -11,6 +11,7 @@ import com.sesac.solbid.dto.UserDto;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.exception.OAuth2Exception;
+import com.sesac.solbid.exception.ReactivationRequiredException;
 import com.sesac.solbid.repository.SocialLoginRepository;
 import com.sesac.solbid.repository.UserRepository;
 import com.sesac.solbid.util.JwtUtil;
@@ -53,6 +54,10 @@ public class UserService {
 
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
             throw new CustomException(ErrorCode.LOGIN_FAILED);
+        }
+
+        if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+            throw new ReactivationRequiredException(user.getEmail());
         }
 
         if (user.getUserStatus() != UserStatus.ACTIVE) {
@@ -115,6 +120,13 @@ public class UserService {
         if (socialLoginOptional.isPresent()) {
             // 기존 소셜 로그인 사용자: 닉네임은 자동 동기화하지 않음
             user = socialLoginOptional.get().getUser();
+            // 상태 체크: ACTIVE/BLOCKED/WITHDRAWN 분기
+            if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+                throw new ReactivationRequiredException(user.getEmail());
+            }
+            if (user.getUserStatus() != UserStatus.ACTIVE) {
+                throw new CustomException(ErrorCode.INACTIVE_USER);
+            }
             // 사용자의 name 은 비어있을 때만 보수적으로 채움
             if (user.getName() == null || user.getName().isBlank()) {
                 if (displayName != null && !displayName.isBlank()) {
@@ -125,6 +137,13 @@ public class UserService {
             Optional<User> userOptional = userRepository.findByEmail(email);
             if (userOptional.isPresent()) {
                 user = userOptional.get();
+                // 상태 체크: ACTIVE/BLOCKED/WITHDRAWN 분기
+                if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+                    throw new ReactivationRequiredException(user.getEmail());
+                }
+                if (user.getUserStatus() != UserStatus.ACTIVE) {
+                    throw new CustomException(ErrorCode.INACTIVE_USER);
+                }
                 // 다른 소셜 계정으로 이미 연결된 경우 충돌 처리
                 Optional<SocialLogin> existingLogin = socialLoginRepository.findByUser(user);
                 if (existingLogin.isPresent() && existingLogin.get().getProvider() != provider) {
@@ -155,6 +174,74 @@ public class UserService {
                         .provider(provider)
                         .providerId(providerId)
                         .build();
+                socialLoginRepository.save(socialLogin);
+            }
+        }
+        return user;
+    }
+
+    @Transactional
+    public User saveOrUpdate(String providerName, Map<String, Object> userAttributes, String providerAccessToken, String providerRefreshToken) {
+        String normalizedProviderName = providerName.substring(0, 1).toUpperCase() + providerName.substring(1).toLowerCase();
+        ProviderType provider = ProviderType.valueOf(normalizedProviderName);
+
+        String providerId = getProviderId(provider, userAttributes);
+        String email = getEmail(provider, userAttributes);
+        String displayName = getDisplayName(provider, userAttributes);
+
+        Optional<SocialLogin> socialLoginOptional = socialLoginRepository.findByProviderAndProviderId(provider, providerId);
+
+        User user;
+        if (socialLoginOptional.isPresent()) {
+            SocialLogin link = socialLoginOptional.get();
+            user = link.getUser();
+            if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+                throw new ReactivationRequiredException(user.getEmail());
+            }
+            if (user.getUserStatus() != UserStatus.ACTIVE) {
+                throw new CustomException(ErrorCode.INACTIVE_USER);
+            }
+            if (providerAccessToken != null || providerRefreshToken != null) {
+                link.updateProviderTokens(providerAccessToken, providerRefreshToken);
+            }
+        } else {
+            Optional<User> userOptional = userRepository.findByEmail(email);
+            if (userOptional.isPresent()) {
+                user = userOptional.get();
+                if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+                    throw new ReactivationRequiredException(user.getEmail());
+                }
+                if (user.getUserStatus() != UserStatus.ACTIVE) {
+                    throw new CustomException(ErrorCode.INACTIVE_USER);
+                }
+                Optional<SocialLogin> existingLogin = socialLoginRepository.findByUser(user);
+                if (existingLogin.isPresent() && existingLogin.get().getProvider() != provider) {
+                    throw new OAuth2Exception(ErrorCode.SOCIAL_ACCOUNT_CONFLICT);
+                }
+                SocialLogin socialLogin = SocialLogin.builder()
+                        .user(user)
+                        .provider(provider)
+                        .providerId(providerId)
+                        .build();
+                socialLogin.updateProviderTokens(providerAccessToken, providerRefreshToken);
+                socialLoginRepository.save(socialLogin);
+            } else {
+                String tempNickname = generateTemporaryNickname();
+                user = User.builder()
+                        .email(email)
+                        .password(null)
+                        .nickname(tempNickname)
+                        .name(displayName)
+                        .phone(null)
+                        .build();
+                userRepository.save(user);
+
+                SocialLogin socialLogin = SocialLogin.builder()
+                        .user(user)
+                        .provider(provider)
+                        .providerId(providerId)
+                        .build();
+                socialLogin.updateProviderTokens(providerAccessToken, providerRefreshToken);
                 socialLoginRepository.save(socialLogin);
             }
         }
@@ -234,5 +321,35 @@ public class UserService {
         }
         // 매우 드문 경우, UUID 일부 사용
         return prefix + Long.toHexString(System.nanoTime());
+    }
+
+    // 회원 탈퇴(소프트 삭제)
+    @Transactional
+    public void withdrawByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+        if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+            return;
+        }
+        user.withdraw();
+    }
+
+    // 계정 재활성화
+    @Transactional
+    public User reactivateByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+        if (user.getUserStatus() == UserStatus.WITHDRAWN) {
+            userStatusToActive(user);
+        }
+        return user;
+    }
+
+    private void userStatusToActive(User user) {
+        try {
+            java.lang.reflect.Field f = User.class.getDeclaredField("userStatus");
+            f.setAccessible(true);
+            f.set(user, UserStatus.ACTIVE);
+        } catch (Exception ignored) { }
     }
 }

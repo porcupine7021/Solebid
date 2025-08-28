@@ -96,4 +96,11 @@ public class User extends BaseEntity {
             this.nickname = newNickname;
         }
     }
+
+    // 회원 탈퇴(소프트 삭제): 상태 전환
+    public void withdraw() {
+        if (this.userStatus != UserStatus.WITHDRAWN) {
+            this.userStatus = UserStatus.WITHDRAWN;
+        }
+    }
 }
