@@ -1,6 +1,6 @@
 import type { CartSummaryProps } from "../types/CartSummaryProps";
 
-const CartSummary: React.FC<CartSummaryProps> = ({ totalAmount, shippingFee, finalAmount, formatPrice }) => {
+const CartSummary = ({ totalAmount, shippingFee, finalAmount, formatPrice }: CartSummaryProps) => {
     return (
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <h3 className="text-base font-semibold text-gray-900 mb-4">

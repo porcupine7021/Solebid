@@ -1,8 +1,7 @@
-import React from 'react';
 import type { CartListProps } from '../types/CartListProps';
 import CartItem from './CartItem';
 
-const CartList: React.FC<CartListProps> = ({ items, isEditing, onToggleEdit, onRemoveItem }) => {
+const CartList = ({ items, isEditing, onToggleEdit, onRemoveItem }: CartListProps) => {
     return (
         <div className='flex flex-col p-4 space-y-4'>
             <button

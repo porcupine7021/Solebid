@@ -1,6 +1,6 @@
 import type { RankingSeller } from "../../types/ranking/RankingSellerProps";
 
-const RankingSellerItem: React.FC<RankingSeller> = ({ rank, image, nickname, successRate, trustScore }) => (
+const RankingSellerItem = ({ rank, image, nickname, successRate, trustScore }: RankingSeller) => (
     <a
         href="#"
         className="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow"

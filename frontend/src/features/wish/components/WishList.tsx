@@ -1,11 +1,8 @@
-import type { WishListProps } from "../../types/wish/WishListProps";
+import type { WishListProps } from "../types/WishListProps";
 import WishEmptyList from "./WishEmptyList";
 import WishItem from "./WishItem";
 
-const WishList: React.FC<WishListProps> = ({
-    items,
-    onRemove,
-}) => {
+const WishList = ({ items, onRemove }: WishListProps) => {
     if (items.length === 0) {
         return <WishEmptyList />;
     }

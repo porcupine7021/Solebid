@@ -1,7 +1,7 @@
 import type { BrandListProps } from "../../types/brand/BrandListProps";
 import BrandItem from "./BrandItem";
 
-const BrandList: React.FC<BrandListProps> = ({ brandData, onBidClick }) => (
+const BrandList = ({ brandData, onBidClick }: BrandListProps) => (
     <div className="bg-white rounded-xl p-8 mb-8">
         <div className="flex items-center mb-6">
             <img

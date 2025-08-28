@@ -1,6 +1,6 @@
 import type { CategoryBreadcrumbProps } from "../../types/category/CategoryBreadcrumb";
 
-const CategoryBreadcrumb: React.FC<CategoryBreadcrumbProps> = ({ categoryName }) => {
+const CategoryBreadcrumb = ({ categoryName }: CategoryBreadcrumbProps) => {
     return (
         <div className="max-w-[1440px] mx-auto px-6 py-4">
             <div className="flex items-center space-x-2 text-sm text-gray-500">

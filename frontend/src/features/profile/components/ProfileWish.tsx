@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import type { ProfileWishProps } from "../types/ProfileWishProps";
 import { wishData } from "./mockData";
 
-const WishItem: React.FC<ProfileWishProps> = ({ name, price, imageUrl }) => (
+const WishItem = ({ name, price, imageUrl }: ProfileWishProps) => (
     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
         <img
             src={imageUrl}

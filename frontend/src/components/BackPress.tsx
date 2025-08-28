@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { BackPressProps } from '../types/BackPressProps';
 
-const BackPress: React.FC<BackPressProps> = ({ children, className }) => {
+const BackPress = ({ children, className }: BackPressProps) => {
     const navigate = useNavigate();
     const handleBackPressed = () => { navigate(-1); };
     return (
