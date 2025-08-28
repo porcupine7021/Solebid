@@ -1,7 +1,7 @@
 import type { RankingProductListProps } from "../../types/ranking/RankingProductProps";
 import RankingProductItem from "./RankingProductItem";
 
-const RankingProductList: React.FC<RankingProductListProps> = ({ items }) => (
+const RankingProductList = ({ items }: RankingProductListProps) => (
     <div className="space-y-4">
         {items.map((item) => (
             <RankingProductItem

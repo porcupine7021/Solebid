@@ -1,6 +1,6 @@
 import type { SearchItemProps } from "../../types/search/SearchItemProps";
 
-const SearchItem: React.FC<SearchItemProps> = ({ product }) => {
+const SearchItem = ({ product }: SearchItemProps) => {
     return (
         <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
             <img

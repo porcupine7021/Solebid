@@ -1,6 +1,6 @@
 import type { CategoryItemProps } from "../../types/category/CategoryItemProps";
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ category }) => {
+const CategoryItem = ({ category }: CategoryItemProps) => {
     return (
         <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
             <div className="aspect-square overflow-hidden">

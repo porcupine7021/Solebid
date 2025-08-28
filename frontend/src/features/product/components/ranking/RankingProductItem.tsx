@@ -1,6 +1,6 @@
 import type { RankingProduct } from "../../types/ranking/RankingProductProps";
 
-const RankingProductItem: React.FC<RankingProduct> = ({ rank, image, name, currentBid, bidders }) => (
+const RankingProductItem = ({ rank, image, name, currentBid, bidders }: RankingProduct) => (
     <a
         href="#"
         className="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow"

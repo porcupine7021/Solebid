@@ -1,12 +1,12 @@
 import { Fragment, useEffect, useState } from "react";
 import type { BrandModalProps } from "../../types/brand/BrandModalProps";
 
-const BrandModal: React.FC<BrandModalProps> = ({
+const BrandModal = ({
     isOpen,
     onClose,
     product,
     onSubmit,
-}) => {
+}: BrandModalProps) => {
     const [bidAmount, setBidAmount] = useState<string>("");
     const [error, setError] = useState<string>("");
 
@@ -39,7 +39,6 @@ const BrandModal: React.FC<BrandModalProps> = ({
             return;
         }
 
-        // 유효성 검사를 통과하면 부모에게 입찰 금액을 전달합니다.
         onSubmit(newBid);
     };
 

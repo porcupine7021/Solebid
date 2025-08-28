@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import type { SearchHeaderProps } from "../../types/search/SearchHeaderProps";
 
-const SearchHeader: React.FC<SearchHeaderProps> = ({
+const SearchHeader = ({
     searchQuery,
     totalResults,
     sortBy,
@@ -10,7 +10,7 @@ const SearchHeader: React.FC<SearchHeaderProps> = ({
     sortOptions,
     showFilters,
     setShowFilters
-}) => {
+}: SearchHeaderProps) => {
     const [isSortOpen, setIsSortOpen] = useState(false);
     const sortDropdownRef = useClickOutside(() => setIsSortOpen(false));
 

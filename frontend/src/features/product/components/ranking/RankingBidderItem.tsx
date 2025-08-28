@@ -1,6 +1,6 @@
 import type { RankingBidderProps } from "../../types/ranking/RankingBidderProps";
 
-const RankingBidderItem: React.FC<RankingBidderProps> = ({ rank, image, nickname, winCount, totalAmount }) => (
+const RankingBidderItem = ({ rank, image, nickname, winCount, totalAmount }: RankingBidderProps) => (
     <a
         href="#"
         className="block bg-white rounded-lg p-4 hover:shadow-md transition-shadow"

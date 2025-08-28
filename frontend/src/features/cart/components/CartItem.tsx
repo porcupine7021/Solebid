@@ -1,7 +1,7 @@
 import { getFormatPrice } from "../../../utils/get-format-price";
 import type { CartItemProps } from "../types/CartItemProps";
 
-const CartItem: React.FC<CartItemProps> = ({ item, isEditing, onRemoveItem }) => {
+const CartItem = ({ item, isEditing, onRemoveItem }: CartItemProps) => {
     return (
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
             <div className="flex items-start space-x-4">

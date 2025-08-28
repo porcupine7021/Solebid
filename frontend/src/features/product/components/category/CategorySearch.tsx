@@ -1,6 +1,6 @@
 import type { CategorySearchProps } from "../../types/category/CategorySearchProps";
 
-const CategorySearch: React.FC<CategorySearchProps> = ({
+const CategorySearch = ({
     brands,
     priceRanges,
     sortOptions,
@@ -10,7 +10,7 @@ const CategorySearch: React.FC<CategorySearchProps> = ({
     setSelectedPriceRange,
     sortBy,
     setSortBy,
-}) => {
+}: CategorySearchProps) => {
     return (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,6 +1,6 @@
 import type { BrandItemProps } from "../../types/brand/BrandItemProps";
 
-const BrandItem: React.FC<BrandItemProps> = ({ product, onBidClick }) => (
+const BrandItem = ({ product, onBidClick }: BrandItemProps) => (
     <div className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
         <img
             src={product.image}

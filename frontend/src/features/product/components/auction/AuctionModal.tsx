@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { AuctionModalProps } from "../../types/auction/AuctionModalProps";
 
-const AuctionModal: React.FC<AuctionModalProps> = ({ isOpen, onClose, currentBid, onSubmit }) => {
+const AuctionModal = ({ isOpen, onClose, currentBid, onSubmit }: AuctionModalProps) => {
     const [bidAmount, setBidAmount] = useState<string>('');
     const currentBidNumber = parseInt(currentBid.replace(/,/g, ''), 10);
     const minBidIncrement = 10000;

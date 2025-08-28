@@ -1,12 +1,12 @@
-import type { WishSearchProps } from "../../types/wish/WishSearchProps";
+import type { WishSearchProps } from "../types/WishSearchProps";
 
-const WishSearch: React.FC<WishSearchProps> = ({
+const WishSearch = ({
     categories,
     selectedCategory,
     onCategoryChange,
     sortBy,
     onSortChange,
-}) => (
+}: WishSearchProps) => (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex justify-between items-center">
             <div className="relative">

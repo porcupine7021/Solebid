@@ -1,6 +1,6 @@
 import type { BrandPopularProps } from "../../types/brand/BrandPopular";
 
-const BrandPopular: React.FC<BrandPopularProps> = ({ brands }) => (
+const BrandPopular = ({ brands }: BrandPopularProps) => (
     <section className="mb-12">
         <h2 className="text-2xl font-bold mb-8">
             인기 브랜드

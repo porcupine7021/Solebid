@@ -1,6 +1,6 @@
 import type { SearchSidebarProps } from "../../types/search/SearchSidebarProps";
 
-const SearchSidebar: React.FC<SearchSidebarProps> = ({
+const SearchSidebar = ({
     showFilters,
     priceRange,
     setPriceRange,
@@ -11,7 +11,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({
     selectedSizes,
     handleSizeChange,
     resetFilters,
-}) => {
+}: SearchSidebarProps) => {
     return (
         <div className=
             {

@@ -1,6 +1,6 @@
 import type { AuctionItemProps } from "../../types/auction/AuctionItemProps";
 
-const AuctionItem: React.FC<AuctionItemProps> = ({ item, onBidClick }) => {
+const AuctionItem = ({ item, onBidClick }: AuctionItemProps) => {
     return (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative h-64">

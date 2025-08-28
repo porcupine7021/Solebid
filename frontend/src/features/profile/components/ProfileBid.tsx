@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import type { ProfileBidProps } from "../types/ProfileBidProps";
 import { bidData } from "./mockData";
 
-const BidItem: React.FC<ProfileBidProps> = ({ name, date, price, imageUrl }) => {
+const BidItem = ({ name, date, price, imageUrl }: ProfileBidProps) => {
     return (
         <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div className="flex items-center">
