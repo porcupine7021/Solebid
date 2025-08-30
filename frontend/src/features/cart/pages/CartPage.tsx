@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Button from "../../../components/Button";
 import CartEmptyList from "../components/CartEmptyList";
 import CartList from "../components/CartList";
 import CartSummary from "../components/CartSummary";
@@ -47,12 +46,12 @@ const CartPage = () => {
                 </main>
                 <div className="fixed bottom-0 left-0 right-0 max-w-3xl mx-auto">
                     <div className="p-4 bg-white">
-                        <Button
+                        <button
                             onClick={() => { }}
                             className="w-full bg-blue-600 text-white py-4 font-semibold text-lg cursor-pointer whitespace-nowrap hover:bg-blue-700 transition-colors rounded-lg"
                         >
                             결제하기 · {formatPrice(finalAmount)}
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </div>
