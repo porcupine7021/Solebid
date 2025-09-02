@@ -46,7 +46,7 @@ const CategoryItem = ({ category }: CategoryItemProps) => {
                     </div>
                     <button
                         onClick={() => { }}
-                        className="px-3 py-1 bg-blue-500 text-white text-xs !rounded-button hover:bg-blue-600 cursor-pointer whitespace-nowrap">
+                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 cursor-pointer whitespace-nowrap">
                         입찰하기
                     </button>
                 </div>

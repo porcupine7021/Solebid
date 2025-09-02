@@ -1,5 +1,10 @@
 export const tabs = ["전체", "시계", "신발", "전자제품", "패션", "수집품"];
 
+export const sortOptions = [
+    { value: "마감임박순", label: "마감임박순" },
+    { value: "신규순", label: "신규순" },
+];
+
 export const notices = [
     {
         id: 1,
