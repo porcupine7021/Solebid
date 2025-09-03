@@ -3,7 +3,7 @@ export interface Category {
     brand: string;
     model: string;
     image: string;
-    currentBid: string;
+    currentBid: number;
     bidders: number;
     timeLeft: string;
     price: number;

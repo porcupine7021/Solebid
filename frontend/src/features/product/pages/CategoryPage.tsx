@@ -15,23 +15,34 @@ const CategoryPage = () => {
         const sortFns: Record<string, (a: Category, b: Category) => number> = {
             'popular': (a, b) => b.bidders - a.bidders,
             'newest': (a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
-            'price-asc': (a, b) => a.price - b.price,
-            'price-desc': (a, b) => b.price - a.price,
+            'price-low': (a, b) => a.currentBid - b.currentBid,
+            'price-high': (a, b) => b.currentBid - a.currentBid,
         };
 
-        const processedCategories = categories
-            .filter(sneaker =>
-                !selectedBrands.length || selectedBrands.includes(sneaker.brand)
-            )
-            .filter(sneaker => {
-                if (!selectedPriceRange) return true;
-                const [min, max] = selectedPriceRange.split('-').map(Number);
-                return sneaker.price >= min && (isNaN(max) || sneaker.price <= max);
-            });
+        const processedCategories = categories.filter(sneaker => {
+            const brandMatch = !selectedBrands.length || selectedBrands.includes(sneaker.brand);
 
-        const sortFn = sortFns[sortBy] || (() => 0);
+            let priceMatch = true;
+
+            if (selectedPriceRange) {
+                const [minStr, maxStr] = selectedPriceRange.split('-');
+                const min = Number(minStr);
+                const max = maxStr ? Number(maxStr) : Infinity;
+
+                if (!isNaN(min) && sneaker.currentBid >= min && !isNaN(max) && sneaker.currentBid <= max) {
+                    priceMatch = true;
+                } else {
+                    priceMatch = false;
+                }
+            }
+
+            return brandMatch && priceMatch;
+        });
+
+        const sortFn = sortFns[sortBy] ?? (() => 0);
 
         return [...processedCategories].sort(sortFn);
+
     }, [selectedBrands, selectedPriceRange, sortBy]);
 
     const {
