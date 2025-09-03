@@ -1,13 +1,8 @@
 package com.sesac.solbid.exception;
 
-import lombok.Getter;
-
-@Getter
-public class PointNotFoundException extends RuntimeException {
-    private final ErrorCode errorCode = ErrorCode.POINT_NOT_FOUND;
-
+public class PointNotFoundException extends CustomException {
     public PointNotFoundException() {
-        super(ErrorCode.POINT_NOT_FOUND.getMessage());
+        super(ErrorCode.POINT_NOT_FOUND);
     }
 
 }
