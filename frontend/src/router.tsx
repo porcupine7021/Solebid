@@ -10,8 +10,8 @@ import AuctionPage from './features/product/pages/AuctionPage';
 import BidPage from './features/product/pages/BidPage';
 import CategoryPage from './features/product/pages/CategoryPage';
 import RankingPage from './features/product/pages/RankingPage';
-import SearchPage from './features/product/pages/SearchPage';
 import ProfilePage from './features/profile/pages/ProfilePage';
+import SearchPage from './features/search/pages/SearchPage';
 import SettingPage from './features/setting/pages/SettingPage';
 import WishPage from './features/wish/pages/WishPage';
 
@@ -27,7 +27,6 @@ import ChargeResultPage from './features/payment/pages/ChargeResultPage.tsx';
 
 import PaymentRecordsPage from './features/payment/pages/PaymentRecordsPage.tsx';
 
-
 const router = createBrowserRouter(
     createRoutesFromElements(
         <Route element={<AppLayout />}>
@@ -39,7 +38,6 @@ const router = createBrowserRouter(
             <Route path="/auction" element={<AuctionPage />} />
             <Route path="/bid" element={<BidPage />} />
             <Route path="/category/:categoryName" element={<CategoryPage />} />
-            <Route path="/search" element={<SearchPage />} />
             <Route path="/ranking" element={<RankingPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/order" element={<OrderPage />} />
@@ -52,6 +50,7 @@ const router = createBrowserRouter(
             <Route path="/policy" element={<PolicyPage />} />
             <Route path="/notification" element={<NotificationPage />} />
             <Route path="/setting" element={<SettingPage />} />
+            <Route path="/search" element={<SearchPage />} />
         </Route>
     )
 )
