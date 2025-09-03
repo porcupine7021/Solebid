@@ -24,6 +24,7 @@ import AppLayout from "./components/AppLayout.tsx";
 
 import ChargePointsPage from './features/payment/pages/ChargePointsPage.tsx';
 import ChargeResultPage from './features/payment/pages/ChargeResultPage.tsx';
+import ProtectedRoute from './features/user/components/ProtectedRoute';
 
 import PaymentRecordsPage from './features/payment/pages/PaymentRecordsPage.tsx';
 
@@ -41,17 +42,17 @@ const router = createBrowserRouter(
             <Route path="/category/:categoryName" element={<CategoryPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/ranking" element={<RankingPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/order" element={<OrderPage />} />
-            <Route path="/order/:orderId" element={<OrderDetailPage />} />
-            <Route path="/wish" element={<WishPage />} />
-            <Route path="/points/charge" element={<ChargePointsPage />} />
-            <Route path="/points/records" element={<PaymentRecordsPage />} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/order" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
+            <Route path="/order/:orderId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+            <Route path="/wish" element={<ProtectedRoute><WishPage /></ProtectedRoute>} />
+            <Route path="/points/charge" element={<ProtectedRoute><ChargePointsPage /></ProtectedRoute>} />
+            <Route path="/points/records" element={<ProtectedRoute><PaymentRecordsPage /></ProtectedRoute>} />
             <Route path="/result" element={<ChargeResultPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/policy" element={<PolicyPage />} />
-            <Route path="/notification" element={<NotificationPage />} />
-            <Route path="/setting" element={<SettingPage />} />
+            <Route path="/notification" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+            <Route path="/setting" element={<ProtectedRoute><SettingPage /></ProtectedRoute>} />
         </Route>
     )
 )
