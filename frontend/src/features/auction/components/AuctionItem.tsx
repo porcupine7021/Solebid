@@ -1,4 +1,4 @@
-import type { AuctionItemProps } from "../../types/auction/AuctionItemProps";
+import type { AuctionItemProps } from "../types/AuctionItemProps";
 
 const AuctionItem = ({ item, onBidClick }: AuctionItemProps) => {
     return (
