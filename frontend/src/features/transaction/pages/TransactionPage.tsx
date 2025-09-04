@@ -24,7 +24,7 @@ const TransactionPage = () => {
             const matchesStatus =
                 selectedStatusFilter === "all" || item.status === selectedStatusFilter;
 
-            const itemDate = new Date(item.date);
+            const itemDate = new Date(item.saleDate);
 
             let matchesDate = true;
 
