@@ -1,4 +1,4 @@
-const ProfileInfo = () => {
+const ProfileUser = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="text-center mb-6">
@@ -25,4 +25,4 @@ const ProfileInfo = () => {
     );
 };
 
-export default ProfileInfo;
+export default ProfileUser;

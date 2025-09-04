@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { menu } from "./mockData";
+import { menuData } from "./mockData";
 
 const ProfileMenu = () => {
     return (
@@ -8,7 +8,7 @@ const ProfileMenu = () => {
                 퀵 메뉴
             </h3>
             <nav className="space-y-2">
-                {menu.map((link, index) => (
+                {menuData.map((link, index) => (
                     <Link
                         key={index}
                         to={link.href}
