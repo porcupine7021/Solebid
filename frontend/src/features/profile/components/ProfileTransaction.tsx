@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import type { ProfileBidProps } from "../types/ProfileBidProps";
-import { bidData } from "./mockData";
+import type { ProfileTransactionProps } from "../types/ProfileTransactionProps";
+import { transactionData } from "./mockData";
 
-const BidItem = ({ name, date, price, imageUrl }: ProfileBidProps) => {
+const TransactionItem = ({ name, date, price, imageUrl }: ProfileTransactionProps) => {
     return (
         <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div className="flex items-center">
@@ -28,12 +28,12 @@ const BidItem = ({ name, date, price, imageUrl }: ProfileBidProps) => {
     );
 }
 
-const ProfileBid = () => {
+const ProfileTransaction = () => {
     return (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                    최근 낙찰 내역
+                    최근 판매 내역
                 </h3>
                 <Link
                     to="/cart"
@@ -42,13 +42,15 @@ const ProfileBid = () => {
                 </Link>
             </div>
             <div className="space-y-4">
-                {bidData.map(order =>
-                    <BidItem key={order.id}
-                        {...order} />
+                {transactionData.map(order =>
+                    <TransactionItem
+                        key={order.id}
+                        {...order}
+                    />
                 )}
             </div>
         </div>
     );
 };
 
-export default ProfileBid;
+export default ProfileTransaction;
