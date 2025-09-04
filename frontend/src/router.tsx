@@ -1,14 +1,13 @@
 import { createBrowserRouter, createRoutesFromElements, Route } from 'react-router-dom';
 
+import AuctionPage from './features/auction/pages/AuctionPage';
 import CartPage from './features/cart/pages/CartPage';
+import CategoryPage from './features/category/pages/CategoryPage';
 import MainPage from './features/main/pages/MainPage';
 import NotificationPage from './features/nofitication/pages/NotificationPage';
 import OrderDetailPage from './features/order/pages/OrderDetailPage';
 import OrderPage from "./features/order/pages/OrderPage";
 import PolicyPage from './features/policy/pages/PolicyPage';
-import AuctionPage from './features/product/pages/AuctionPage';
-import BidPage from './features/product/pages/BidPage';
-import CategoryPage from './features/product/pages/CategoryPage';
 import ProfilePage from './features/profile/pages/ProfilePage';
 import SearchPage from './features/search/pages/SearchPage';
 import SettingPage from './features/setting/pages/SettingPage';
@@ -22,11 +21,10 @@ import OAuth2Callback from "./features/user/pages/OAuth2Callback.tsx";
 import Signup from "./features/user/pages/Signup.tsx";
 
 import AppLayout from "./components/AppLayout.tsx";
+import ProtectedRoute from './features/user/components/ProtectedRoute';
 
 import ChargePointsPage from './features/payment/pages/ChargePointsPage.tsx';
 import ChargeResultPage from './features/payment/pages/ChargeResultPage.tsx';
-import ProtectedRoute from './features/user/components/ProtectedRoute';
-
 import PaymentRecordsPage from './features/payment/pages/PaymentRecordsPage.tsx';
 
 const router = createBrowserRouter(
@@ -38,7 +36,6 @@ const router = createBrowserRouter(
             <Route path="/auth/callback/:provider" element={<OAuth2Callback />} />
             <Route path="/nickname-setup" element={<NicknameSetup />} />
             <Route path="/auction" element={<AuctionPage />} />
-            <Route path="/bid" element={<BidPage />} />
             <Route path="/category/:categoryName" element={<CategoryPage />} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/order" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
