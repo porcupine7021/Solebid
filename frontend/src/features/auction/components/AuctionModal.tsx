@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AuctionModalProps } from "../../types/auction/AuctionModalProps";
+import type { AuctionModalProps } from "../types/AuctionModalProps";
 
 const AuctionModal = ({ isOpen, onClose, currentBid, onSubmit }: AuctionModalProps) => {
     const [bidAmount, setBidAmount] = useState<string>('');

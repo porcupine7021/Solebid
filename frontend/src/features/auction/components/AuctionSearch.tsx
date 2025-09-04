@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AuctionSearchProps } from "../../types/auction/AuctionSearchProps";
+import type { AuctionSearchProps } from "../types/AuctionSearchProps";
 
 const AuctionSearch = ({
     categories,

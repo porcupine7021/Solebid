@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { AuctionList, AuctionModal, AuctionSearch } from "../components/auction";
-import { auctions, categories, sortOptions } from "../components/auction/mockData";
-import type { AuctionItem } from "../types/auction/AuctionItem";
+import { AuctionList, AuctionModal, AuctionSearch } from "../components";
+import { auctions, categories, sortOptions } from "../components/mockData";
+import type { AuctionItem } from "../types/AuctionItem";
 
 const AuctionPage = () => {
     const [auctionItems, setAuctionItems] = useState<AuctionItem[]>(auctions);
