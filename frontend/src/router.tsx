@@ -12,6 +12,7 @@ import CategoryPage from './features/product/pages/CategoryPage';
 import ProfilePage from './features/profile/pages/ProfilePage';
 import SearchPage from './features/search/pages/SearchPage';
 import SettingPage from './features/setting/pages/SettingPage';
+import TransactionDetailPage from './features/transaction/pages/TransactionDetailPage';
 import TransactionPage from './features/transaction/pages/TransactionPage';
 import WishPage from './features/wish/pages/WishPage';
 
@@ -52,6 +53,7 @@ const router = createBrowserRouter(
             <Route path="/notification" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
             <Route path="/setting" element={<ProtectedRoute><SettingPage /></ProtectedRoute>} />
             <Route path="/transaction" element={<ProtectedRoute><TransactionPage /></ProtectedRoute>} />
+            <Route path="/transaction/:orderId" element={<ProtectedRoute><TransactionDetailPage /></ProtectedRoute>} />
         </Route>
     )
 )

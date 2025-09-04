@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { getStatusColor } from "../../../utils/get-status-color";
 import type { TransactionItemProps } from "../types/TransactionItemProps";
 
@@ -16,7 +17,7 @@ const TransactionItem = ({ item }: TransactionItemProps) => {
                             {item.name}
                         </h3>
                         <p className="text-gray-600 text-sm mb-2">
-                            판매일: {item.date}
+                            판매일: {item.saleDate}
                         </p>
                         <div className="flex items-center space-x-4">
                             <span className="font-semibold text-gray-900">
@@ -29,12 +30,12 @@ const TransactionItem = ({ item }: TransactionItemProps) => {
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button
-                        onClick={() => { }}
+                    <Link
+                        to={`/transaction/${item.id}`}
                         className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 !rounded-button whitespace-nowrap"
                     >
                         상세보기
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>

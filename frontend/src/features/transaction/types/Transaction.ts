@@ -1,7 +1,8 @@
 export interface Transaction {
     id: number;
     name: string;
-    date: string;
+    orderDate: string;
+    saleDate: string;
     price: number;
     status: string;
     statusText: string;
