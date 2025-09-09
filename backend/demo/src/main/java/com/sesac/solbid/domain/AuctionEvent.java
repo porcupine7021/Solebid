@@ -4,13 +4,11 @@ import com.sesac.solbid.domain.baseentity.BaseEntity;
 import com.sesac.solbid.domain.enums.AuctionStatus;
 import com.sesac.solbid.domain.enums.EventEnum;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Getter
@@ -27,6 +25,11 @@ public class AuctionEvent  extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    // 경매의 판매자 (권한/리스트업/원샷 취소용)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private User seller;
 
     // 경매 상태
     @Enumerated(EnumType.STRING)
@@ -70,9 +73,44 @@ public class AuctionEvent  extends BaseEntity {
     // 부가
     @Column(name = "view_count", nullable = false)
     @ColumnDefault("0")
-    private Integer viewCount = 0;
+    private final Integer viewCount = 0;
 
     @Column(name = "is_blind", nullable = false)
     @ColumnDefault("false")
-    private Boolean isBlind = false;
+    private final Boolean isBlind = false;
+
+    //  생성/비즈니스 메서드
+    @Builder
+    public AuctionEvent(Product product, User seller, AuctionStatus status,
+                        BigDecimal startPrice, BigDecimal buyoutPrice, BigDecimal tickSize,
+                        LocalDateTime startAt, LocalDateTime endAt, Integer extendSeconds,
+                        User highestBidder, BigDecimal highestBidAmount) {
+        this.product = product;
+        this.seller = seller;
+        this.status = status == null ? AuctionStatus.READY : status;
+        this.startPrice = normalize(startPrice);
+        this.buyoutPrice = buyoutPrice == null ? null : normalize(buyoutPrice);
+        this.tickSize = tickSize == null ? new BigDecimal("1.00") : normalize(tickSize);
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.extendSeconds = extendSeconds == null ? 30 : extendSeconds;
+        this.highestBidder = highestBidder;
+        this.highestBidAmount = highestBidAmount == null ? this.startPrice : normalize(highestBidAmount);
+    }
+
+    private BigDecimal normalize(BigDecimal v) {
+        return v.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    // READY에서만 판매자가 취소 가능
+    public void cancelBy(Long sellerId) {
+        if (!this.seller.getUserId().equals(sellerId)) {
+            throw new IllegalStateException("ONLY_SELLER_CAN_CANCEL");
+        }
+        if (this.status != AuctionStatus.READY) {
+            throw new IllegalStateException("AUCTION_NOT_READY");
+        }
+        this.status = AuctionStatus.CANCELED;
+    }
+
 }

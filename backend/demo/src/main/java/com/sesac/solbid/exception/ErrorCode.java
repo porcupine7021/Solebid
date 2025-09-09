@@ -1,5 +1,8 @@
 package com.sesac.solbid.exception;
 
+import org.springframework.http.HttpStatus;
+
+
 public enum ErrorCode {
     INVALID_PARAMETER(400, "매개변수 값이 잘못되었습니다"),
     DB_CONSTRAINT_VIOLATION(409, "DB 제약조건 위반"),
@@ -27,16 +30,29 @@ public enum ErrorCode {
     OAUTH2_USER_INFO_ERROR(400, "OAuth2 사용자 정보 획득에 실패했습니다."),
     SOCIAL_ACCOUNT_CONFLICT(409, "이미 다른 소셜 계정으로 연결된 이메일입니다."),
 
-    // 포인트 관련 에러
-    POINT_NOT_FOUND(404, "해당 사용자의 포인트 정보가 존재하지 않습니다."),
-    INSUFFICIENT_POINT(400, "포인트가 부족합니다."),
-    POINT_TRANSACTION_ERROR(500, "포인트 트랜잭션 처리 중 오류가 발생했습니다.");
+    // 포인트 관련 에러 (HttpStatus 기반)
+    POINT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 포인트 정보가 존재하지 않습니다."),
+    INSUFFICIENT_POINT(HttpStatus.BAD_REQUEST, "포인트가 부족합니다."),
+    POINT_TRANSACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "포인트 트랜잭션 처리 중 오류가 발생했습니다."),
+
+    // 상품 관련 에러 (HttpStatus 기반)
+    INVALID_SIZE_RANGE(HttpStatus.BAD_REQUEST, "잘못된 사이즈 범위입니다."),
+    THUMBNAIL_DUPLICATED(HttpStatus.BAD_REQUEST, "중복된 썸네일입니다."),
+    SORT_ORDER_DUPLICATED(HttpStatus.BAD_REQUEST, "정렬 순서가 중복되었습니다."),
+    INVALID_IMAGE_KEY(HttpStatus.BAD_REQUEST, "잘못된 이미지 키입니다."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다.");
 
     private final int status;
     private final String message;
 
     ErrorCode(int status, String message) {
         this.status = status;
+        this.message = message;
+    }
+
+    // HttpStatus 생성자
+    ErrorCode(HttpStatus status, String message) {
+        this.status = status.value();
         this.message = message;
     }
 
