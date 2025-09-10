@@ -19,6 +19,8 @@ import Login from "./features/user/pages/Login.tsx";
 import NicknameSetup from "./features/user/pages/NicknameSetup.tsx";
 import OAuth2Callback from "./features/user/pages/OAuth2Callback.tsx";
 import Signup from "./features/user/pages/Signup.tsx";
+import FindPassword from './features/user/pages/FindPassword';
+import ResetPassword from './features/user/pages/ResetPassword';
 
 import AppLayout from "./components/AppLayout.tsx";
 import ProtectedRoute from './features/user/components/ProtectedRoute';
@@ -26,6 +28,7 @@ import ProtectedRoute from './features/user/components/ProtectedRoute';
 import ChargePointsPage from './features/payment/pages/ChargePointsPage.tsx';
 import ChargeResultPage from './features/payment/pages/ChargeResultPage.tsx';
 import PaymentRecordsPage from './features/payment/pages/PaymentRecordsPage.tsx';
+import NewAuctionProductPage from "./features/product/pages/NewAuctionProductPage.tsx";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -43,6 +46,7 @@ const router = createBrowserRouter(
             <Route path="/wish" element={<ProtectedRoute><WishPage /></ProtectedRoute>} />
             <Route path="/points/charge" element={<ProtectedRoute><ChargePointsPage /></ProtectedRoute>} />
             <Route path="/points/records" element={<ProtectedRoute><PaymentRecordsPage /></ProtectedRoute>} />
+            <Route path="/products/new" element={<ProtectedRoute><NewAuctionProductPage /></ProtectedRoute>} />
             <Route path="/result" element={<ChargeResultPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/policy" element={<PolicyPage />} />
@@ -51,6 +55,8 @@ const router = createBrowserRouter(
             <Route path="/setting" element={<ProtectedRoute><SettingPage /></ProtectedRoute>} />
             <Route path="/transaction" element={<ProtectedRoute><TransactionPage /></ProtectedRoute>} />
             <Route path="/transaction/:orderId" element={<ProtectedRoute><TransactionDetailPage /></ProtectedRoute>} />
+            <Route path="/find-password" element={<FindPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
     )
 )
