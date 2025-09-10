@@ -1,15 +1,16 @@
 package com.sesac.solbid.domain;
 
 import com.sesac.solbid.domain.baseentity.BaseEntity;
-import com.sesac.solbid.domain.enums.*;
+import com.sesac.solbid.domain.enums.ProductBrand;
+import com.sesac.solbid.domain.enums.ProductCategory;
+import com.sesac.solbid.domain.enums.ProductCondition;
+import com.sesac.solbid.domain.enums.ProductStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name="product")
+@Table(name = "product")
 public class Product extends BaseEntity {
 
     @Id
@@ -26,10 +27,13 @@ public class Product extends BaseEntity {
     @Column(name = "product_id")
     private Long productId;
 
-    //판매자
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
-    private User seller;
+    // 판매자
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "seller_id", nullable = false)
+    // private User seller;
+
+    @OneToMany(mappedBy = "product")
+    private List<AuctionEvent> auctionEvents = new ArrayList<>();
 
     //이미지
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -83,18 +87,20 @@ public class Product extends BaseEntity {
     private LocalDate releaseDate;
 
     @Builder
-    public Product(User seller,
-                   ProductCategory productCategory,
-                   ProductStatus productStatus,
-                   ProductCondition productCondition,
-                   ProductBrand productBrand,
-                   int size,
-                   String name,
-                   String description,
-                   String modelCode,
-                   String colorway,
-                   LocalDate releaseDate) {
-        this.seller = seller;
+    public Product(
+            List<AuctionEvent> auctionEvents,
+            ProductCategory productCategory,
+            ProductStatus productStatus,
+            ProductCondition productCondition,
+            ProductBrand productBrand,
+            int size,
+            String name,
+            String description,
+            String modelCode,
+            String colorway,
+            LocalDate releaseDate
+    ) {
+        this.auctionEvents = auctionEvents;
         this.productCategory = productCategory;
         this.productStatus = (productStatus == null ? ProductStatus.AVAILABLE : productStatus);
         this.productCondition = productCondition;

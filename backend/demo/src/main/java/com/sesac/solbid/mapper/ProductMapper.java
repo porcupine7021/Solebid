@@ -13,7 +13,7 @@ import org.mapstruct.Named;
 public interface ProductMapper {
 
     @Mappings({
-            @Mapping(target = "seller", source = "seller"),
+            // @Mapping(target = "seller", source = "seller"),
             @Mapping(target = "productCategory", source = "req.category"),
             @Mapping(target = "productStatus", source = "req.status", qualifiedByName = "mapStatus"),
             @Mapping(target = "productCondition", source = "req.condition"),
@@ -25,6 +25,7 @@ public interface ProductMapper {
             @Mapping(target = "colorway", source = "req.colorway"),
             @Mapping(target = "releaseDate", source = "req.releaseDate")
     })
+
     Product toEntity(ProductCreateRequest req, User seller);
 
     @Named("mapStatus")
