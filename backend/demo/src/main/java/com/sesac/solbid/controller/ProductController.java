@@ -1,13 +1,17 @@
 package com.sesac.solbid.controller;
 
+import com.sesac.solbid.dto.ApiResponse;
 import com.sesac.solbid.dto.product.request.ProductCreateRequest;
 import com.sesac.solbid.dto.product.response.ProductCreateResponse;
+import com.sesac.solbid.dto.product.response.ProductResponse;
 import com.sesac.solbid.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,15 +45,20 @@ public class ProductController {
     }
 
     private record ProductCreateResponse(Long productId) {}
-*/
-    //JWT 필터 붙이고 다시 @RequestAttribute("userId")로 원복
+    */
+
+    // JWT 필터 붙이고 다시 @RequestAttribute("userId")로 원복
     @PostMapping
-    public ResponseEntity<?> create(@RequestHeader("X-User-Id") Long userId,
-                                    @Validated @RequestBody ProductCreateRequest req) {
-        log.info("POST /api/products by userId={} name={} images={}", userId, req.name(),
-                req.images() != null ? req.images().size() : 0);
+    public ResponseEntity<?> create(@RequestHeader("X-User-Id") Long userId, @Validated @RequestBody ProductCreateRequest req) {
+        log.info("POST /api/products by userId={} name={} images={}", userId, req.name(), req.images() != null ? req.images().size() : 0);
         Long id = productService.create(userId, req);
         log.info("Product created: id={} by userId={}", id, userId);
         return ResponseEntity.status(201).body(new ProductCreateResponse(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts() {
+        List<ProductResponse> products = productService.getProducts();
+        return ResponseEntity.ok(ApiResponse.success(products));
     }
 }

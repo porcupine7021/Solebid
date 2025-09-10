@@ -4,6 +4,7 @@ import com.sesac.solbid.domain.Product;
 import com.sesac.solbid.domain.ProductImage;
 import com.sesac.solbid.domain.User;
 import com.sesac.solbid.dto.product.request.ProductCreateRequest;
+import com.sesac.solbid.dto.product.response.ProductResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.mapper.ProductImageMapper;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -91,4 +94,13 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getProducts() {
+        return productRepository
+                .findAll()
+                .stream()
+                .map(ProductResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
 }

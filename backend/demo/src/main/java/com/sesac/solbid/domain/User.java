@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name="user")
+@Table(name = "user")
 public class User extends BaseEntity {
 
     @Id
@@ -64,8 +64,10 @@ public class User extends BaseEntity {
     private List<SocialLogin> socialLogins = new ArrayList<>();
     @OneToMany(mappedBy = "user")
     private List<PointTransaction> pointTransactions = new ArrayList<>();
-    @OneToMany(mappedBy = "seller")
-    private List<Product> products = new ArrayList<>();
+
+    // @OneToMany(mappedBy = "seller")
+    // private List<Product> products = new ArrayList<>();
+
     @OneToMany(mappedBy = "bidder")
     private List<Bid> bids = new ArrayList<>();
     @OneToMany(mappedBy = "winner")
