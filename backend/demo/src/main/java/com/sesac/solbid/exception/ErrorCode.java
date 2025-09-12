@@ -39,6 +39,15 @@ public enum ErrorCode {
     OAUTH_TOKEN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Google OAuth2 Access Token 발급에 실패했습니다."),
     PASSWORD_RESET_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "해당 계정은 비밀번호 재설정을 지원하지 않습니다."),
 
+    // 이메일 인증 관련
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 필요합니다."),
+    EMAIL_VERIFICATION_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 인증 토큰입니다."),
+    EMAIL_VERIFICATION_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "인증 토큰이 만료되었습니다."),
+    EMAIL_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "이미 인증된 이메일입니다."),
+    EMAIL_VERIFICATION_RESEND_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "인증 이메일 재전송 횟수를 초과했습니다."),
+    EMAIL_VERIFICATION_RESEND_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "인증 이메일 재전송은 5분 후에 가능합니다."),
+    UNVERIFIED_ACCOUNT_EXPIRED(HttpStatus.GONE, "미인증 계정이 만료되어 삭제되었습니다."),
+
     // 포인트 관련 에러
     POINT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 포인트 정보가 존재하지 않습니다."),
     INSUFFICIENT_POINT(HttpStatus.BAD_REQUEST, "포인트가 부족합니다."),
