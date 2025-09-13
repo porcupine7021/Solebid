@@ -1,9 +1,8 @@
 import {format} from "date-fns";
 import React from "react";
-import {useWishes} from "../../wish/hooks/useWishes.ts";
 import type {AuctionItemProps} from "../types/AuctionItemProps";
 
-const AuctionItem = ({item, onBidClick}: AuctionItemProps) => {
+const AuctionItem = ({item, addWish, removeWish, isAdding, isRemoving, onBidClick}: AuctionItemProps) => {
     const date = new Date(item.timeLeft);
 
     const timeLeft = format(date, 'HH:mm:ss');
@@ -15,10 +14,6 @@ const AuctionItem = ({item, onBidClick}: AuctionItemProps) => {
 
     const currentBid = formatter.format(item.currentBid ?? 0);
 
-    const {isWished, addWish, removeWish, isAdding, isRemoving} = useWishes();
-
-    const wished = isWished(item.id);
-
     const isLoading = isAdding || isRemoving;
 
     const handleClick = (e: React.MouseEvent) => {
@@ -27,7 +22,7 @@ const AuctionItem = ({item, onBidClick}: AuctionItemProps) => {
 
         if (isLoading) return;
 
-        if (wished) {
+        if (item.isWished) {
             removeWish(item.id);
         } else {
             addWish(item);
@@ -46,7 +41,13 @@ const AuctionItem = ({item, onBidClick}: AuctionItemProps) => {
                     onClick={handleClick}
                     className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 cursor-pointer"
                 >
-                    <i className={`fas fa-heart text-sm ${wished ? 'text-red-500' : 'text-gray-400'}`}/>
+                    <i className={
+                        `fas fa-heart text-sm 
+                        ${item.isWished
+                            ? 'text-red-500'
+                            : 'text-gray-400'
+                        }`}
+                    />
                 </button>
             </div>
             <div className="p-6">
@@ -88,4 +89,4 @@ const AuctionItem = ({item, onBidClick}: AuctionItemProps) => {
     );
 };
 
-export default AuctionItem;
+export default AuctionItem; 

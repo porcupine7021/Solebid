@@ -7,4 +7,5 @@ export interface AuctionItem {
     timeLeft: string;
     bidders: number;
     category: string;
+    isWished?: boolean;
 }
