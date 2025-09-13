@@ -23,11 +23,11 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedisEmailVerificationTokenService implements EmailVerificationTokenService {
 
-    private static final Duration TOKEN_TTL = Duration.ofHours(24); // 24시간 토큰 유효기간
-    private static final Duration RESEND_INTERVAL = Duration.ofMinutes(5); // 5분 재전송 간격
+    private static final Duration TOKEN_TTL = Duration.ofMinutes(5); // 5분 토큰 유효기간
+    private static final Duration RESEND_INTERVAL = Duration.ofMinutes(1); // 1분 재전송 간격
     private static final int MAX_DAILY_RESEND = 5; // 일일 최대 재전송 횟수
     
-    private static final String TOKEN_KEY_PREFIX = "email_verification:token:";
+    private static final String TOKEN_KEY_PREFIX = "email_verification:code:";
     private static final String RESEND_KEY_PREFIX = "email_verification:resend:";
     private static final String DAILY_COUNT_KEY_PREFIX = "email_verification:daily:";
 
@@ -35,14 +35,22 @@ public class RedisEmailVerificationTokenService implements EmailVerificationToke
 
     @Override
     public String createToken(String email) {
-        String token = UUID.randomUUID().toString().replace("-", "");
-        String key = tokenKey(token);
+        // 6자리 숫자 인증번호 생성
+        String verificationCode = generateVerificationCode();
+        String key = tokenKey(verificationCode);
         
-        // 토큰과 이메일을 Redis에 저장 (24시간 TTL)
+        // 인증번호와 이메일을 Redis에 저장 (5분 TTL)
         redis.opsForValue().set(key, email, TOKEN_TTL);
         
-        log.debug("[Redis] 이메일 인증 토큰 생성: {} for {}", maskToken(token), maskEmail(email));
-        return token;
+        log.debug("[Redis] 이메일 인증번호 생성: {} for {}", maskToken(verificationCode), maskEmail(email));
+        return verificationCode;
+    }
+    
+    /**
+     * 6자리 숫자 인증번호 생성
+     */
+    private String generateVerificationCode() {
+        return String.format("%06d", (int) (Math.random() * 1000000));
     }
 
     @Override
@@ -102,7 +110,7 @@ public class RedisEmailVerificationTokenService implements EmailVerificationToke
             return false;
         }
         
-        // 2. 마지막 재전송 시간 확인 (5분 간격)
+        // 2. 마지막 재전송 시간 확인 (1분 간격)
         long lastResendTime = getLastResendTime(email);
         if (lastResendTime > 0) {
             long currentTime = Instant.now().getEpochSecond();
@@ -125,7 +133,7 @@ public class RedisEmailVerificationTokenService implements EmailVerificationToke
         
         long currentTime = Instant.now().getEpochSecond();
         
-        // 1. 마지막 재전송 시간 기록 (5분 TTL)
+        // 1. 마지막 재전송 시간 기록 (1분 TTL)
         String resendKey = resendKey(email);
         redis.opsForValue().set(resendKey, String.valueOf(currentTime), RESEND_INTERVAL);
         
@@ -220,10 +228,10 @@ public class RedisEmailVerificationTokenService implements EmailVerificationToke
      * 토큰 마스킹 (보안을 위해)
      */
     private String maskToken(String token) {
-        if (token == null || token.length() < 8) {
+        if (token == null || token.length() != 6) {
             return "****";
         }
-        return token.substring(0, 4) + "****" + token.substring(token.length() - 4);
+        return token.substring(0, 2) + "****";
     }
 
     /**

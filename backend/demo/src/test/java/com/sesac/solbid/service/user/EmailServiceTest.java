@@ -51,27 +51,17 @@ class EmailServiceTest {
 
     @Test
     void testCreateVerificationEmailTemplate() {
-        String link = "http://localhost:5173/auth/verify-email?token=test-token";
-        String template = invokePrivateMethod("createVerificationEmailTemplate", link);
+        String verificationCode = "123456";
+        String template = invokePrivateMethod("createVerificationEmailTemplate", verificationCode);
         
         assertNotNull(template);
-        assertTrue(template.contains("이메일 인증 안내"));
-        assertTrue(template.contains(link));
+        assertTrue(template.contains("이메일 인증번호 안내"));
+        assertTrue(template.contains(verificationCode));
         assertTrue(template.contains("SoleBid"));
-        assertTrue(template.contains("24시간 후에 만료"));
+        assertTrue(template.contains("5분 후에 만료"));
     }
 
-    @Test
-    void testCreateFinalReminderEmailTemplate() {
-        String link = "http://localhost:5173/auth/verify-email?token=test-token";
-        String template = invokePrivateMethod("createFinalReminderEmailTemplate", link);
-        
-        assertNotNull(template);
-        assertTrue(template.contains("계정 삭제 예정"));
-        assertTrue(template.contains(link));
-        assertTrue(template.contains("2시간 후에 자동으로 삭제"));
-        assertTrue(template.contains("지금 인증하기"));
-    }
+
 
     @Test
     void testCreatePasswordResetEmailTemplate() {

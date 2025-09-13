@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Profile("!redis")
 public class InMemoryEmailVerificationTokenService implements EmailVerificationTokenService {
 
-    private static final long TOKEN_TTL_SECONDS = 24 * 60 * 60; // 24시간
-    private static final long RESEND_INTERVAL_SECONDS = 5 * 60; // 5분
+    private static final long TOKEN_TTL_SECONDS = 5 * 60; // 5분
+    private static final long RESEND_INTERVAL_SECONDS = 1 * 60; // 1분
     private static final int MAX_DAILY_RESEND = 5; // 일일 최대 재전송 횟수
 
     private final Map<String, TokenEntry> tokenStore = new ConcurrentHashMap<>();
@@ -32,13 +32,21 @@ public class InMemoryEmailVerificationTokenService implements EmailVerificationT
     public String createToken(String email) {
         cleanup();
         
-        String token = UUID.randomUUID().toString().replace("-", "");
+        // 6자리 숫자 인증번호 생성
+        String verificationCode = generateVerificationCode();
         Instant expiry = Instant.now().plusSeconds(TOKEN_TTL_SECONDS);
         
-        tokenStore.put(token, new TokenEntry(email, expiry));
+        tokenStore.put(verificationCode, new TokenEntry(email, expiry));
         
-        log.debug("[InMemory] 이메일 인증 토큰 생성: {} for {}", maskToken(token), maskEmail(email));
-        return token;
+        log.debug("[InMemory] 이메일 인증번호 생성: {} for {}", maskToken(verificationCode), maskEmail(email));
+        return verificationCode;
+    }
+    
+    /**
+     * 6자리 숫자 인증번호 생성
+     */
+    private String generateVerificationCode() {
+        return String.format("%06d", (int) (Math.random() * 1000000));
     }
 
     @Override
@@ -104,7 +112,7 @@ public class InMemoryEmailVerificationTokenService implements EmailVerificationT
             return false;
         }
         
-        // 2. 마지막 재전송 시간 확인 (5분 간격)
+        // 2. 마지막 재전송 시간 확인 (1분 간격)
         long lastResendTime = getLastResendTime(email);
         if (lastResendTime > 0) {
             long currentTime = Instant.now().getEpochSecond();
@@ -216,10 +224,10 @@ public class InMemoryEmailVerificationTokenService implements EmailVerificationT
      * 토큰 마스킹 (보안을 위해)
      */
     private String maskToken(String token) {
-        if (token == null || token.length() < 8) {
+        if (token == null || token.length() != 6) {
             return "****";
         }
-        return token.substring(0, 4) + "****" + token.substring(token.length() - 4);
+        return token.substring(0, 2) + "****";
     }
 
     /**

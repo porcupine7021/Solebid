@@ -250,7 +250,7 @@ class EmailVerificationServiceTest {
         // given
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(unverifiedUser));
         when(tokenService.getDailyResendCount(testEmail)).thenReturn(2);
-        when(tokenService.getLastResendTime(testEmail)).thenReturn(System.currentTimeMillis() / 1000 - 200); // 3분 전
+        when(tokenService.getLastResendTime(testEmail)).thenReturn(System.currentTimeMillis() / 1000 - 30); // 30초 전
 
         // when & then
         assertThatThrownBy(() -> emailVerificationService.resendVerificationEmail(testEmail))

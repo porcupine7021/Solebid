@@ -52,7 +52,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertFalse(response.getBody().isSuccess());
         assertEquals("EMAIL_VERIFICATION_RESEND_TOO_FREQUENT", response.getBody().getErrorCode());
-        assertEquals("인증 이메일 재전송은 5분 후에 가능합니다.", response.getBody().getMessage());
+        assertEquals("인증번호 재전송은 1분 후에 가능합니다.", response.getBody().getMessage());
         assertNotNull(response.getBody().getData());
     }
 

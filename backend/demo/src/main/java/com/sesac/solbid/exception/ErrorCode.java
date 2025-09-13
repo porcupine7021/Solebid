@@ -45,8 +45,7 @@ public enum ErrorCode {
     EMAIL_VERIFICATION_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "인증 토큰이 만료되었습니다."),
     EMAIL_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "이미 인증된 이메일입니다."),
     EMAIL_VERIFICATION_RESEND_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "인증 이메일 재전송 횟수를 초과했습니다."),
-    EMAIL_VERIFICATION_RESEND_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "인증 이메일 재전송은 5분 후에 가능합니다."),
-    UNVERIFIED_ACCOUNT_EXPIRED(HttpStatus.GONE, "미인증 계정이 만료되어 삭제되었습니다."),
+    EMAIL_VERIFICATION_RESEND_TOO_FREQUENT(HttpStatus.TOO_MANY_REQUESTS, "인증번호 재전송은 1분 후에 가능합니다."),
 
     // 포인트 관련 에러
     POINT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자의 포인트 정보가 존재하지 않습니다."),

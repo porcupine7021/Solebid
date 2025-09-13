@@ -72,16 +72,7 @@ class EmailVerificationExceptionUtilsTest {
         assertEquals("180초 후 재시도 가능", exception.getAdditionalInfo());
     }
 
-    @Test
-    void testAccountExpired() {
-        // When
-        EmailVerificationException exception = EmailVerificationExceptionUtils.accountExpired(TEST_EMAIL);
 
-        // Then
-        assertEquals(ErrorCode.UNVERIFIED_ACCOUNT_EXPIRED, exception.getErrorCode());
-        assertEquals(TEST_EMAIL, exception.getEmail());
-        assertNull(exception.getAdditionalInfo());
-    }
 
     @Test
     void testVerificationRequired() {

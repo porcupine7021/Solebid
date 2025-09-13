@@ -2,6 +2,7 @@ package com.sesac.solbid.controller;
 
 import com.sesac.solbid.dto.ApiResponse;
 import com.sesac.solbid.dto.auth.request.ResendVerificationRequest;
+import com.sesac.solbid.dto.auth.request.VerifyCodeRequest;
 import com.sesac.solbid.dto.auth.response.EmailVerificationResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.EmailVerificationException;
@@ -82,6 +83,60 @@ public class EmailVerificationController {
     }
 
     /**
+     * 이메일 인증번호 검증 (새로운 방식)
+     * POST /api/auth/verify-code
+     * 
+     * @param request 인증번호 검증 요청 (이메일과 인증번호 포함)
+     * @param httpRequest HTTP 요청 (로깅용)
+     * @return 인증 결과
+     */
+    @PostMapping("/verify-code")
+    public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyCode(
+            @Valid @RequestBody VerifyCodeRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        log.info("이메일 인증번호 검증 요청: clientIp={}, userAgent={}, email={}, code={}", 
+                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()), maskCode(request.getVerificationCode()));
+        
+        try {
+            String email = emailVerificationService.verifyEmailWithCode(request.getEmail(), request.getVerificationCode());
+            
+            EmailVerificationResponse response = EmailVerificationResponse.success(
+                    maskEmail(email), 
+                    "이메일 인증이 완료되었습니다."
+            );
+            
+            log.info("이메일 인증번호 검증 성공: clientIp={}, email={}", clientIp, maskEmail(email));
+            
+            return ResponseEntity.ok(
+                ApiResponse.success(response, "이메일 인증이 완료되었습니다.")
+            );
+            
+        } catch (EmailVerificationException e) {
+            log.warn("이메일 인증번호 검증 실패: clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (CustomException e) {
+            log.warn("이메일 인증번호 검증 실패(Custom): clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (Exception e) {
+            log.error("이메일 인증번호 검증 중 예외 발생: clientIp={}, email={}", 
+                    clientIp, maskEmail(request.getEmail()), e);
+            return ResponseEntity.internalServerError().body(
+                ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
+            );
+        }
+    }
+
+    /**
      * 인증 이메일 재전송
      * POST /api/auth/resend-verification
      * 
@@ -107,7 +162,7 @@ public class EmailVerificationController {
                     clientIp, maskEmail(request.getEmail()));
             
             return ResponseEntity.ok(
-                ApiResponse.success(Collections.emptyMap(), "인증 이메일을 재전송했습니다.")
+                ApiResponse.success(Collections.emptyMap(), "인증번호를 재전송했습니다.")
             );
             
         } catch (EmailVerificationException e) {
@@ -185,5 +240,15 @@ public class EmailVerificationController {
         }
 
         return localPart.substring(0, 2) + "****@" + domain;
+    }
+
+    /**
+     * 인증번호 마스킹 처리 (보안)
+     */
+    private String maskCode(String code) {
+        if (code == null || code.length() != 6) {
+            return "****";
+        }
+        return code.substring(0, 2) + "****";
     }
 }

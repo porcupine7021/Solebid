@@ -26,7 +26,7 @@ public class EmailVerificationService {
     private final UserRepository userRepository;
 
     // 재전송 제한 상수
-    private static final int RESEND_INTERVAL_MINUTES = 5;
+    private static final int RESEND_INTERVAL_MINUTES = 1;
     private static final int DAILY_RESEND_LIMIT = 5;
 
     /**
@@ -55,7 +55,7 @@ public class EmailVerificationService {
     }
 
     /**
-     * 이메일 인증을 처리합니다.
+     * 이메일 인증을 처리합니다. (토큰 방식 - 하위 호환성)
      * @param token 인증 토큰
      * @return 인증된 사용자의 이메일
      */
@@ -84,6 +84,40 @@ public class EmailVerificationService {
         user.verifyEmail();
         
         log.info("이메일 인증 완료: {}", maskEmail(email));
+        return email;
+    }
+
+    /**
+     * 이메일 인증번호를 검증합니다. (새로운 인증번호 방식)
+     * @param email 이메일 주소
+     * @param verificationCode 6자리 인증번호
+     * @return 인증된 사용자의 이메일
+     */
+    @Transactional
+    public String verifyEmailWithCode(String email, String verificationCode) {
+        log.info("이메일 인증번호 검증 시작: email={}, code={}", maskEmail(email), maskCode(verificationCode));
+        
+        // 사용자 존재 여부 확인
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 이미 인증된 경우 처리
+        if (user.getEmailVerified()) {
+            log.info("이미 인증된 사용자의 인증번호 사용: {}", maskEmail(email));
+            return email; // 이미 인증된 경우에도 성공으로 처리
+        }
+        
+        // 인증번호 검증 및 소비
+        String tokenEmail = tokenService.consumeToken(verificationCode);
+        if (tokenEmail == null || !tokenEmail.equals(email)) {
+            log.warn("유효하지 않은 인증번호: email={}, code={}", maskEmail(email), maskCode(verificationCode));
+            throw EmailVerificationExceptionUtils.invalidToken(email);
+        }
+        
+        // 이메일 인증 처리
+        user.verifyEmail();
+        
+        log.info("이메일 인증번호 검증 완료: {}", maskEmail(email));
         return email;
     }
 
@@ -130,7 +164,7 @@ public class EmailVerificationService {
             throw EmailVerificationExceptionUtils.resendLimitExceeded(email, dailyCount, DAILY_RESEND_LIMIT);
         }
         
-        // 마지막 재전송 시간 확인 (5분 간격 제한)
+        // 마지막 재전송 시간 확인 (1분 간격 제한)
         long lastResendTime = tokenService.getLastResendTime(email);
         if (lastResendTime > 0) {
             long currentTime = System.currentTimeMillis() / 1000;
@@ -157,5 +191,17 @@ public class EmailVerificationService {
             return "**@" + parts[1];
         }
         return parts[0].substring(0, 2) + "****@" + parts[1];
+    }
+
+    /**
+     * 인증번호를 마스킹합니다.
+     * @param code 마스킹할 인증번호
+     * @return 마스킹된 인증번호
+     */
+    private String maskCode(String code) {
+        if (code == null || code.length() != 6) {
+            return "****";
+        }
+        return code.substring(0, 2) + "****";
     }
 }

@@ -74,54 +74,30 @@ public class EmailService {
     }
 
     /**
-     * 이메일 인증 메일 전송
+     * 이메일 인증 메일 전송 (인증번호 방식)
      */
     @Retryable(
         retryFor = {IOException.class, GeneralSecurityException.class, MessagingException.class},
         maxAttempts = MAX_RETRY_ATTEMPTS,
         backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    public void sendVerificationEmail(String to, String token) {
+    public void sendVerificationEmail(String to, String verificationCode) {
         try {
             Gmail service = createGmailService();
             
-            String subject = "[SoleBid] 이메일 인증 안내";
-            String verificationLink = frontendBaseUrl + "/auth/verify-email?token=" + token;
-            String htmlContent = createVerificationEmailTemplate(verificationLink);
+            String subject = "[SoleBid] 이메일 인증번호 안내";
+            String htmlContent = createVerificationEmailTemplate(verificationCode);
             
             sendEmail(service, to, subject, htmlContent);
-            log.info("이메일 인증 메일 발송 성공: {}", maskEmail(to));
+            log.info("이메일 인증번호 발송 성공: {}", maskEmail(to));
             
         } catch (Exception e) {
-            log.error("이메일 인증 메일 발송 실패: {}", maskEmail(to), e);
+            log.error("이메일 인증번호 발송 실패: {}", maskEmail(to), e);
             throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
         }
     }
 
-    /**
-     * 마지막 알림 이메일 전송 (계정 삭제 2시간 전)
-     */
-    @Retryable(
-        retryFor = {IOException.class, GeneralSecurityException.class, MessagingException.class},
-        maxAttempts = MAX_RETRY_ATTEMPTS,
-        backoff = @Backoff(delay = 1000, multiplier = 2)
-    )
-    public void sendFinalReminderEmail(String to, String token) {
-        try {
-            Gmail service = createGmailService();
-            
-            String subject = "[SoleBid] 계정 삭제 예정 - 마지막 알림";
-            String verificationLink = frontendBaseUrl + "/auth/verify-email?token=" + token;
-            String htmlContent = createFinalReminderEmailTemplate(verificationLink);
-            
-            sendEmail(service, to, subject, htmlContent);
-            log.info("마지막 알림 이메일 발송 성공: {}", maskEmail(to));
-            
-        } catch (Exception e) {
-            log.error("마지막 알림 이메일 발송 실패: {}", maskEmail(to), e);
-            throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
-        }
-    }
+
 
     /**
      * Gmail 서비스 클라이언트 생성
@@ -177,62 +153,34 @@ public class EmailService {
     }
 
     /**
-     * 이메일 인증 메일 템플릿
+     * 이메일 인증번호 메일 템플릿
      */
-    private String createVerificationEmailTemplate(String verificationLink) {
+    private String createVerificationEmailTemplate(String verificationCode) {
         return """
             <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 3px solid #28a745;">
                     <h1 style="color: #28a745; margin: 0;">SoleBid</h1>
                 </div>
                 <div style="padding: 30px 20px;">
-                    <h2 style="color: #333; margin-bottom: 20px;">이메일 인증 안내</h2>
+                    <h2 style="color: #333; margin-bottom: 20px;">이메일 인증번호 안내</h2>
                     <p style="margin-bottom: 20px;">안녕하세요!</p>
-                    <p style="margin-bottom: 20px;">SoleBid 회원가입을 완료하기 위해 이메일 인증이 필요합니다. 아래 버튼을 클릭하여 이메일 인증을 완료해주세요.</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="%s" style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">이메일 인증하기</a>
+                    <p style="margin-bottom: 20px;">SoleBid 회원가입을 완료하기 위해 이메일 인증이 필요합니다. 아래 인증번호를 입력하여 이메일 인증을 완료해주세요.</p>
+                    <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border: 2px dashed #28a745; border-radius: 10px;">
+                        <p style="margin: 0 0 10px 0; font-size: 16px; color: #666;">인증번호</p>
+                        <div style="font-size: 32px; font-weight: bold; color: #28a745; letter-spacing: 8px; font-family: 'Courier New', monospace;">%s</div>
                     </div>
-                    <p style="margin-bottom: 10px; color: #666; font-size: 14px;">⚠️ 이 링크는 24시간 후에 만료됩니다.</p>
+                    <p style="margin-bottom: 10px; color: #666; font-size: 14px;">⚠️ 이 인증번호는 5분 후에 만료됩니다.</p>
                     <p style="margin-bottom: 10px; color: #666; font-size: 14px;">📧 이메일이 스팸 폴더에 있을 수 있으니 확인해주세요.</p>
-                    <p style="margin-bottom: 20px; color: #666; font-size: 14px;">이메일 인증을 완료하지 않으면 24시간 후 계정이 자동으로 삭제됩니다.</p>
+                    <p style="margin-bottom: 20px; color: #666; font-size: 14px;">🔒 보안을 위해 인증번호를 타인과 공유하지 마세요.</p>
                 </div>
                 <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #dee2e6; font-size: 12px; color: #666;">
                     <p>© 2025 SoleBid. All rights reserved.</p>
                 </div>
             </div>
-            """.formatted(verificationLink);
+            """.formatted(verificationCode);
     }
 
-    /**
-     * 마지막 알림 이메일 템플릿
-     */
-    private String createFinalReminderEmailTemplate(String verificationLink) {
-        return """
-            <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 3px solid #dc3545;">
-                    <h1 style="color: #dc3545; margin: 0;">SoleBid</h1>
-                </div>
-                <div style="padding: 30px 20px;">
-                    <h2 style="color: #dc3545; margin-bottom: 20px;">⚠️ 계정 삭제 예정 - 마지막 알림</h2>
-                    <p style="margin-bottom: 20px;">안녕하세요!</p>
-                    <p style="margin-bottom: 20px; color: #dc3545; font-weight: bold;">귀하의 SoleBid 계정이 2시간 후에 자동으로 삭제될 예정입니다.</p>
-                    <p style="margin-bottom: 20px;">이메일 인증을 완료하지 않아 계정 삭제가 예정되어 있습니다. 계정을 유지하려면 지금 즉시 이메일 인증을 완료해주세요.</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="%s" style="background-color: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">지금 인증하기</a>
-                    </div>
-                    <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
-                        <p style="margin: 0; color: #856404; font-size: 14px;">
-                            <strong>중요:</strong> 이 링크를 클릭하면 계정이 즉시 활성화되어 삭제가 취소됩니다.
-                        </p>
-                    </div>
-                    <p style="margin-bottom: 20px; color: #666; font-size: 14px;">만약 계정을 삭제하려고 의도하셨다면, 이 이메일을 무시해주세요.</p>
-                </div>
-                <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #dee2e6; font-size: 12px; color: #666;">
-                    <p>© 2025 SoleBid. All rights reserved.</p>
-                </div>
-            </div>
-            """.formatted(verificationLink);
-    }
+
 
     /**
      * MimeMessage 객체 생성

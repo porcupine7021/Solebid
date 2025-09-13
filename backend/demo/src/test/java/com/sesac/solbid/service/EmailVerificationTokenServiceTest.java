@@ -41,8 +41,8 @@ class EmailVerificationTokenServiceTest {
         // Then
         assertThat(token).isNotNull();
         assertThat(token).isNotEmpty();
-        assertThat(token).hasSize(32); // UUID without hyphens
-        assertThat(token).matches("^[0-9a-f]{32}$");
+        assertThat(token).hasSize(6); // 6자리 인증번호
+        assertThat(token).matches("^[0-9]{6}$");
     }
 
     @Test
@@ -330,9 +330,9 @@ class EmailVerificationTokenServiceTest {
 
         // Then
         assertThat(maskedToken).isNotEqualTo(token);
-        assertThat(maskedToken).startsWith(token.substring(0, 4));
-        assertThat(maskedToken).endsWith(token.substring(token.length() - 4));
-        assertThat(maskedToken).contains("****");
+        assertThat(maskedToken).startsWith(token.substring(0, 2));
+        assertThat(maskedToken).endsWith("****");
+        assertThat(maskedToken).hasSize(6);
     }
 
     @Test
