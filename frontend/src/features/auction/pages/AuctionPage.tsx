@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useWishes } from "../../wish/hooks/useWishes.ts";
 import { AuctionList, AuctionModal, AuctionSearch } from "../components";
 import { categories, sortOptions } from "../components/mockData";
 import { getProducts } from "../services/AuctionService";
@@ -11,14 +12,23 @@ const AuctionPage = () => {
         queryFn: getProducts,
         select: (response) => response.data,
     });
+
+    const { wishes, addWish, removeWish, isAdding, isRemoving } = useWishes();
+
+    const wishedIds = useMemo(() => new Set(wishes?.map(wish => wish.id) ?? []), [wishes]);
+
     const [selectedCategory, setSelectedCategory] = useState('전체');
     const [priceRange, setPriceRange] = useState([0, 1000000]);
     const [sortOption, setSortOption] = useState('남은 시간순');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
 
+    const processedItems = useMemo(() => {
+        return (products ?? []).map(item => ({ ...item, isWished: wishedIds.has(item.id) }));
+    }, [products, wishedIds]);
+
     const filteredItems = useMemo(() => {
-        return (products ?? []).filter(item => {
+        return processedItems.filter(item => {
             const categoryMatch = selectedCategory === '전체' || item.category === selectedCategory;
             const price = item.currentBid || 0;
             const priceMatch = price >= priceRange[0] && price <= priceRange[1];
@@ -32,7 +42,7 @@ const AuctionPage = () => {
                 // 기본은 '남은시간순' 또는 다른 옵션
                 return (a.timeLeft || '').localeCompare(b.timeLeft || '');
             });
-    }, [products, selectedCategory, priceRange, sortOption]);
+    }, [processedItems, selectedCategory, priceRange, sortOption]);
 
     const handleBidClick = (item: AuctionItem) => {
         setSelectedItem(item);
@@ -79,6 +89,10 @@ const AuctionPage = () => {
                 />
                 <AuctionList
                     items={filteredItems}
+                    addWish={addWish}
+                    removeWish={removeWish}
+                    isAdding={isAdding}
+                    isRemoving={isRemoving}
                     onBidClick={handleBidClick}
                 />
             </main>
