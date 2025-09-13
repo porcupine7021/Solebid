@@ -44,13 +44,6 @@ public class EmailVerificationExceptionUtils {
     }
 
     /**
-     * 미인증 계정이 만료되었을 때 예외를 생성합니다.
-     */
-    public static EmailVerificationException accountExpired(String email) {
-        return new EmailVerificationException(ErrorCode.UNVERIFIED_ACCOUNT_EXPIRED, email);
-    }
-
-    /**
      * 이메일 인증이 필요할 때 예외를 생성합니다.
      */
     public static EmailVerificationException verificationRequired(String email) {

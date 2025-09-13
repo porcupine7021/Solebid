@@ -1,5 +1,10 @@
 package com.sesac.solbid.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sesac.solbid.domain.User;
+import com.sesac.solbid.dto.ApiResponse;
+import com.sesac.solbid.exception.ErrorCode;
+import com.sesac.solbid.service.user.UserService;
 import com.sesac.solbid.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,6 +21,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +30,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final UserService userService;
+    private final ObjectMapper objectMapper;
+
+    // 이메일 인증이 필요한 엔드포인트 패턴들
+    private final List<String> emailVerificationRequiredPaths = Arrays.asList(
+        "/api/users/profile",
+        "/api/products",
+        "/api/auctions",
+        "/api/points"
+    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -39,6 +56,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     if (!userDetails.isEnabled()) {
                         throw new DisabledException("User is not active");
+                    }
+
+                    // 이메일 인증 확인 (특정 엔드포인트에서만)
+                    if (requiresEmailVerification(request.getRequestURI())) {
+                        User user = userService.getByEmail(username);
+                        // 소셜 로그인 사용자(password가 null)는 이메일 인증 제외
+                        if (user.getPassword() != null && !user.getEmailVerified()) {
+                            sendErrorResponse(response, ErrorCode.EMAIL_NOT_VERIFIED);
+                            return;
+                        }
                     }
 
                     UsernamePasswordAuthenticationToken authentication =
@@ -64,5 +91,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         return null;
+    }
+
+    private boolean requiresEmailVerification(String requestURI) {
+        return emailVerificationRequiredPaths.stream()
+                .anyMatch(requestURI::startsWith);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        response.setStatus(errorCode.getStatus().value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        ApiResponse<Object> apiResponse = ApiResponse.error(errorCode.name(), errorCode.getMessage());
+        String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+        response.getWriter().write(jsonResponse);
     }
 }
