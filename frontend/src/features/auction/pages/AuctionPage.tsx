@@ -1,21 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { useWishes } from "../../wish/hooks/useWishes.ts";
-import { AuctionList, AuctionModal, AuctionSearch } from "../components";
-import { categories, sortOptions } from "../components/mockData";
-import { getProducts } from "../services/AuctionService";
-import type { AuctionItem } from "../types/AuctionItem";
+import {useMemo, useState} from "react";
+import {useWishes} from "../../wish/hooks/useWishes.ts";
+import {AuctionList, AuctionModal, AuctionSearch} from "../components";
+import {categories, sortOptions} from "../components/mockData";
+import type {AuctionItem} from "../types/AuctionItem";
+import {useAuctions} from "../hooks/useAuctions.ts";
 
 const AuctionPage = () => {
-    const { data: products, isLoading, isError, error } = useQuery({
-        queryKey: ['products'],
-        queryFn: () => getProducts(),
-        select: (response) => response.data,
-    });
+    const {data: products, isLoading, isError, error} = useAuctions();
+    const {wishes, addWish, removeWish, isAdding, isRemoving} = useWishes();
 
-    const { wishes, addWish, removeWish, isAdding, isRemoving } = useWishes();
-
-    const wishedIds = useMemo(() => new Set(wishes?.map(wish => wish.id) ?? []), [wishes]);
+    const wishedIds = useMemo(() => new Set(
+            wishes?.map(wish => wish.id) ?? []
+        ),
+        [wishes]
+    );
 
     const [selectedCategory, setSelectedCategory] = useState('전체');
     const [priceRange, setPriceRange] = useState([0, 1000000]);
@@ -24,7 +22,9 @@ const AuctionPage = () => {
     const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
 
     const processedItems = useMemo(() => {
-        return (products ?? []).map(item => ({ ...item, isWished: wishedIds.has(item.id) }));
+        return (products ?? []).map(item =>
+            ({...item, isWished: wishedIds.has(item.id)})
+        );
     }, [products, wishedIds]);
 
     const filteredItems = useMemo(() => {
@@ -39,7 +39,7 @@ const AuctionPage = () => {
                 if (sortOption === '인기순') {
                     return b.bidders - a.bidders;
                 }
-                // 기본은 '남은시간순' 또는 다른 옵션
+                // 기본은 '남은 시간순' 또는 다른 옵션
                 return (a.timeLeft || '').localeCompare(b.timeLeft || '');
             });
     }, [processedItems, selectedCategory, priceRange, sortOption]);
@@ -49,6 +49,7 @@ const AuctionPage = () => {
         setIsModalOpen(true);
     };
 
+    // TODO: Refactor this block, Temporarily commented out
     // const handleBidSubmit = (bidAmount: number) => {
     //    if (selectedItem) {
     //        console.log(`Submitted bid: ₩${bidAmount.toLocaleString()} for ${selectedItem.name}`);
@@ -106,7 +107,8 @@ const AuctionPage = () => {
                         setSelectedItem(null);
                     }}
                     currentBid={selectedItem.currentBid ?? 0}
-                    onSubmit={() => { }}
+                    onSubmit={() => {
+                    }}
                 />
             )}
         </div>
