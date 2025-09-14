@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +78,7 @@ public class WishServiceImpl implements WishService {
                 .findByUser(user)
                 .stream()
                 .map(Wish::getProduct)
-                .map(ProductResponse::fromEntity).collect(Collectors.toList());
+                .map(ProductResponse::fromEntity)
+                .toList();
     }
 }
