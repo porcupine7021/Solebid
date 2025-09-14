@@ -57,8 +57,11 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts() {
-        List<ProductResponse> products = productService.getProducts();
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) Integer limit
+    ) {
+        List<ProductResponse> products = productService.getProducts(sortBy, limit);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 }
