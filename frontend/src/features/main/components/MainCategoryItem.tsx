@@ -1,6 +1,6 @@
 import type { MainCategoryProps } from "../types/MainCategoryProps";
 
-const MainCategory = ({ category, onClick }: MainCategoryProps) => {
+const MainCategoryItem = ({ category, onClick }: MainCategoryProps) => {
     return (
         <div
             className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
@@ -21,4 +21,4 @@ const MainCategory = ({ category, onClick }: MainCategoryProps) => {
     );
 };
 
-export default MainCategory;
+export default MainCategoryItem;

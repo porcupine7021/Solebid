@@ -1,10 +1,22 @@
+import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import type { MainProductProps } from "../types/MainProductProps";
 
-const MainProduct = ({ product }: MainProductProps) => {
+const MainProductItem = ({ product }: MainProductProps) => {
+    const date = new Date(product.timeLeft);
+
+    const timeLeft = format(date, 'HH:mm:ss');
+
+    const formatter = new Intl.NumberFormat('ko-KR', {
+        style: 'currency',
+        currency: 'KRW'
+    });
+
+    const currentBid = formatter.format(product.price);
+
     return (
         <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
-            <Link to={``}>
+            <Link to={`/product/${product.id}`}>
                 <img
                     src={product.image}
                     alt={product.name}
@@ -21,7 +33,7 @@ const MainProduct = ({ product }: MainProductProps) => {
                             현재가
                         </p>
                         <p className="text-lg font-semibold text-blue-600">
-                            ₩{product.price.toLocaleString()}
+                            {currentBid}
                         </p>
                     </div>
                     <div className="text-right">
@@ -29,7 +41,7 @@ const MainProduct = ({ product }: MainProductProps) => {
                             {product.bidCount}명 참여
                         </p>
                         <p className="text-sm font-medium text-red-500">
-                            {product.timeLeft} 남음
+                            {timeLeft} 남음
                         </p>
                     </div>
                 </div>
@@ -38,4 +50,4 @@ const MainProduct = ({ product }: MainProductProps) => {
     );
 };
 
-export default MainProduct;
+export default MainProductItem;

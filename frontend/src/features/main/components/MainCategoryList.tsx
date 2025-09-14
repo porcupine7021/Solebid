@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import type { MainCategoryListProps } from "../types/MainCategoryListProps";
-import MainCategory from "./MainCategory";
+import MainCategoryItem from "./MainCategoryItem";
 
-const CategoryList = ({ categories }: MainCategoryListProps) => {
+const MainCategoryList = ({ categories }: MainCategoryListProps) => {
     const navigate = useNavigate();
 
     const handleCategoryClick = (categoryName: string) => {
@@ -16,7 +16,7 @@ const CategoryList = ({ categories }: MainCategoryListProps) => {
             </h3>
             <div className="grid grid-cols-4 gap-4">
                 {categories.map((category) => (
-                    <MainCategory
+                    <MainCategoryItem
                         key={category.name}
                         category={category}
                         onClick={() => handleCategoryClick(category.name)}
@@ -27,4 +27,4 @@ const CategoryList = ({ categories }: MainCategoryListProps) => {
     );
 };
 
-export default CategoryList;
+export default MainCategoryList;
