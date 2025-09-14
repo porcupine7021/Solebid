@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ProductServiceImpl implements ProductService {
+
+    private static final String SORT_BY_OPTION = "bidCount";
 
     private static final String TMP_PREFIX = "products/tmp/"; // tmp: 보안 강화
 
@@ -112,11 +115,24 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponse> getProducts() {
-        return productRepository
+    public List<ProductResponse> getProducts(String sortBy, Integer limit) {
+        List<ProductResponse> productResponses = productRepository
                 .findAll()
                 .stream()
                 .map(ProductResponse::fromEntity)
                 .collect(Collectors.toList());
+
+        if (SORT_BY_OPTION.equals(sortBy)) {
+            productResponses.sort(Comparator.comparingInt(ProductResponse::bidders).reversed());
+        }
+
+        if (limit != null && limit > 0) {
+            return productResponses
+                    .stream()
+                    .limit(limit)
+                    .toList();
+        }
+
+        return productResponses;
     }
 }
