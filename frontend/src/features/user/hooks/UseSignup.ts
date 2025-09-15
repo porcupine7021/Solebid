@@ -3,20 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import type { Agreements, SignupErrors, SignupFormData } from '../types/SignupTypes.ts';
 import { signupUser } from '../services/UserService';
 import { getOAuth2AuthUrl } from '../services/AuthService';
+import { sendVerificationEmail, verifySignupEmailCode } from '../services/EmailVerificationService';
 
 export function useSignup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<SignupFormData>({
-    email: '', password: '', confirmPassword: '', nickname: '', name: '', phone: '',
+    email: '', password: '', confirmPassword: '', nickname: '', name: '', phone: '', verificationCode: '',
   });
   const [agreements, setAgreements] = useState<Agreements>({ all: false, terms: false, privacy: false, marketing: false });
   const [errors, setErrors] = useState<SignupErrors>({
-    email: '', password: '', confirmPassword: '', nickname: '', name: '', phone: '', agreeTerms: '', agreePrivacy: ''
+    email: '', password: '', confirmPassword: '', nickname: '', name: '', phone: '', agreeTerms: '', agreePrivacy: '', verificationCode: ''
   });
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,6 +59,12 @@ export function useSignup() {
     if (name === 'nickname') error = validateNickname(value);
     if (name === 'phone') error = validatePhone(value);
     if (name === 'name' && !value) error = '이름을 입력해주세요.';
+    if (name === 'verificationCode') {
+      // 인증번호가 6자리 완성되면 자동 검증
+      if (value.length === 6) {
+        handleVerifyCode(value);
+      }
+    }
 
     setErrors((prev) => ({ ...prev, [name]: error } as SignupErrors));
   };
@@ -75,15 +87,66 @@ export function useSignup() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agreements.terms, agreements.privacy, agreements.marketing]);
 
+  const handleVerifyCode = async (code: string) => {
+    if (!code || code.length !== 6 || !formData.email) {
+      setErrors(prev => ({ ...prev, verificationCode: '6자리 인증번호를 입력해주세요.' }));
+      return;
+    }
+
+    setVerifyingCode(true);
+    setErrors(prev => ({ ...prev, verificationCode: '' }));
+
+    try {
+      const response = await verifySignupEmailCode({
+        email: formData.email,
+        verificationCode: code,
+      });
+
+      if (response.success) {
+        setEmailVerified(true);
+        setErrors(prev => ({ ...prev, verificationCode: '' }));
+      } else {
+        setErrors(prev => ({ 
+          ...prev, 
+          verificationCode: response.message || '인증번호가 올바르지 않습니다.'
+        }));
+      }
+    } catch (error) {
+      console.error('Email verification error:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        verificationCode: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      }));
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const isFormValid = useMemo(() => {
-    const isFormDataFilled = Object.values(formData).every((v) => String(v).trim() !== '');
-    const noErrors = !Object.values(errors).some((e) => e !== '');
+    if (!emailVerified) return false;
+    
+    // verificationCode 제외하고 검증
+    const isFormDataFilled = Object.entries(formData).every(([k, v]) => (
+      k === 'verificationCode' ? true : String(v).trim() !== ''
+    ));
+
+    // verificationCode 오류 제외하고 검증
+    const noErrors = Object.entries(errors).every(([k, e]) => (
+      k === 'verificationCode' ? true : e === ''
+    ));
+
     const requiredAgreements = agreements.terms && agreements.privacy;
     return isFormDataFilled && noErrors && requiredAgreements;
-  }, [formData, errors, agreements]);
+  }, [formData, errors, agreements, emailVerified]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!emailVerified) {
+      alert('이메일 인증을 먼저 완료해주세요.');
+      return;
+    }
+
     const newErrors: SignupErrors = {
       email: validateEmail(formData.email),
       password: validatePassword(formData.password),
@@ -93,10 +156,14 @@ export function useSignup() {
       phone: validatePhone(formData.phone),
       agreeTerms: !agreements.terms ? '이용약관에 동의해주세요.' : '',
       agreePrivacy: !agreements.privacy ? '개인정보 처리방침에 동의해주세요.' : '',
+      verificationCode: '', // 이미 검증 완료
     };
     setErrors(newErrors);
 
-    const valid = Object.values(newErrors).every((err) => err === '');
+    // verificationCode 키를 제외하고 유효성 확인
+    const valid = Object.entries(newErrors).every(([k, err]) => (
+      k === 'verificationCode' ? true : err === ''
+    ));
     if (!valid) return;
 
     try {
@@ -110,8 +177,9 @@ export function useSignup() {
         marketing: agreements.marketing,
       });
       if (res.success) {
-        alert('회원가입이 성공적으로 완료되었습니다!');
-        navigate('/');
+        // 회원가입 완료 후 로그인 페이지로 리다이렉트
+        alert('회원가입이 완료되었습니다! 로그인해주세요.');
+        navigate('/login', { replace: true });
       } else {
         alert(res.message || '회원가입에 실패했습니다.');
       }
@@ -135,18 +203,60 @@ export function useSignup() {
       } else {
         alert(resp.message || '카카오 로그인 URL 생성에 실패했습니다.');
       }
-    } catch (e) {
+    } catch {
       alert('카카오 로그인 준비 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleGoogleStart = async () => {
+    try {
+      const resp = await getOAuth2AuthUrl('google');
+      if (resp.success && resp.data?.authUrl) {
+        window.location.href = resp.data.authUrl;
+      } else {
+        alert(resp.message || '구글 로그인 URL 생성에 실패했습니다.');
+      }
+    } catch {
+      alert('구글 로그인 준비 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleSendVerificationCode = async () => {
+    if (!formData.email || errors.email) {
+      return;
+    }
+
+    try {
+      setSendingCode(true);
+      setVerificationSent(false);
+      
+      const response = await sendVerificationEmail({
+        email: formData.email,
+      });
+
+      if (response.success) {
+        setVerificationSent(true);
+        setShowSuccessMessage(true);
+        // 3초 후 성공 메시지만 숨기기
+        setTimeout(() => setShowSuccessMessage(false), 3000);
+      } else {
+        alert(response.message || '인증번호 전송에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Send verification code error:', error);
+      alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setSendingCode(false);
     }
   };
 
   return {
     formData, agreements, errors,
     showTermsModal, showPrivacyModal, submitting,
+    sendingCode, verificationSent, showSuccessMessage, emailVerified, verifyingCode,
     isFormValid,
     handleInputChange, handleAllAgreements, handleAgreementChange, handleSubmit,
     openTermsModal, openPrivacyModal, closeModal,
-    handleKakaoStart,
+    handleKakaoStart, handleGoogleStart, handleSendVerificationCode, handleVerifyCode,
   };
 }
-
