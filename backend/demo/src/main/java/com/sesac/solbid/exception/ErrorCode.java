@@ -33,6 +33,10 @@ public enum ErrorCode {
     // 비밀번호 재설정
     PASSWORD_RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "비밀번호 재설정 토큰이 유효하지 않습니다."),
     PASSWORD_RESET_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "비밀번호 재설정 토큰이 만료되었습니다."),
+    PASSWORD_RESET_OTP_INVALID(HttpStatus.BAD_REQUEST, "비밀번호 재설정 인증번호가 유효하지 않습니다."),
+    PASSWORD_RESET_OTP_EXPIRED(HttpStatus.BAD_REQUEST, "비밀번호 재설정 인증번호가 만료되었습니다."),
+    PASSWORD_RESET_OTP_ATTEMPTS_EXCEEDED(HttpStatus.BAD_REQUEST, "인증번호 입력 횟수를 초과했습니다."),
+    PASSWORD_RESET_RESEND_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "재전송 횟수를 초과했습니다."),
     PASSWORD_RESET_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "이전에 사용한 비밀번호와 동일합니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이메일 발송에 실패했습니다."),
