@@ -55,6 +55,33 @@ public class EmailVerificationService {
     }
 
     /**
+     * 회원가입 전 이메일 인증번호를 전송합니다.
+     * @param email 인증할 이메일 주소
+     */
+    @Transactional
+    public void sendVerificationForSignup(String email) {
+        log.info("회원가입 전 이메일 인증번호 전송 시작: {}", maskEmail(email));
+        
+        // 이미 가입된 이메일인지 확인
+        if (userRepository.findByEmail(email).isPresent()) {
+            log.warn("이미 가입된 이메일로 회원가입 전 인증번호 전송 시도: {}", maskEmail(email));
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
+        
+        // 재전송 제한 확인
+        validateResendLimits(email);
+        
+        // 재전송 요청 기록
+        tokenService.recordResendRequest(email);
+        
+        // 토큰 생성 및 이메일 전송
+        String token = tokenService.createToken(email);
+        emailService.sendVerificationEmail(email, token);
+        
+        log.info("회원가입 전 이메일 인증번호 전송 완료: {}", maskEmail(email));
+    }
+
+    /**
      * 이메일 인증을 처리합니다. (토큰 방식 - 하위 호환성)
      * @param token 인증 토큰
      * @return 인증된 사용자의 이메일
@@ -118,6 +145,27 @@ public class EmailVerificationService {
         user.verifyEmail();
         
         log.info("이메일 인증번호 검증 완료: {}", maskEmail(email));
+        return email;
+    }
+
+    /**
+     * 회원가입 전 이메일 인증번호를 검증합니다.
+     * @param email 이메일 주소
+     * @param verificationCode 6자리 인증번호
+     * @return 검증된 이메일 주소
+     */
+    @Transactional
+    public String verifyEmailForSignup(String email, String verificationCode) {
+        log.info("회원가입 전 이메일 인증번호 검증 시작: email={}, code={}", maskEmail(email), maskCode(verificationCode));
+        
+        // 인증번호 검증 및 소비
+        String tokenEmail = tokenService.consumeToken(verificationCode);
+        if (tokenEmail == null || !tokenEmail.equals(email)) {
+            log.warn("유효하지 않은 인증번호: email={}, code={}", maskEmail(email), maskCode(verificationCode));
+            throw EmailVerificationExceptionUtils.invalidToken(email);
+        }
+        
+        log.info("회원가입 전 이메일 인증번호 검증 완료: {}", maskEmail(email));
         return email;
     }
 

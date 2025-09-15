@@ -137,6 +137,110 @@ public class EmailVerificationController {
     }
 
     /**
+     * 회원가입 전 이메일 인증번호 검증
+     * POST /api/auth/verify-signup-code
+     * 
+     * @param request 인증번호 검증 요청 (이메일과 인증번호 포함)
+     * @param httpRequest HTTP 요청 (로깅용)
+     * @return 인증 결과
+     */
+    @PostMapping("/verify-signup-code")
+    public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifySignupCode(
+            @Valid @RequestBody VerifyCodeRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        log.info("회원가입 전 이메일 인증번호 검증 요청: clientIp={}, userAgent={}, email={}, code={}", 
+                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()), maskCode(request.getVerificationCode()));
+        
+        try {
+            String email = emailVerificationService.verifyEmailForSignup(request.getEmail(), request.getVerificationCode());
+            
+            EmailVerificationResponse response = EmailVerificationResponse.success(
+                    maskEmail(email), 
+                    "이메일 인증이 완료되었습니다."
+            );
+            
+            log.info("회원가입 전 이메일 인증번호 검증 성공: clientIp={}, email={}", clientIp, maskEmail(email));
+            
+            return ResponseEntity.ok(
+                ApiResponse.success(response, "이메일 인증이 완료되었습니다.")
+            );
+            
+        } catch (EmailVerificationException e) {
+            log.warn("회원가입 전 이메일 인증번호 검증 실패: clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (CustomException e) {
+            log.warn("회원가입 전 이메일 인증번호 검증 실패(Custom): clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (Exception e) {
+            log.error("회원가입 전 이메일 인증번호 검증 중 예외 발생: clientIp={}, email={}", 
+                    clientIp, maskEmail(request.getEmail()), e);
+            return ResponseEntity.internalServerError().body(
+                ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
+            );
+        }
+    }
+
+    /**
+     * 회원가입 전 이메일 인증번호 전송
+     * POST /api/auth/send-verification
+     * 
+     * @param request 인증번호 전송 요청 (이메일 포함)
+     * @param httpRequest HTTP 요청 (로깅용)
+     * @return 전송 결과
+     */
+    @PostMapping("/send-verification")
+    public ResponseEntity<ApiResponse<Object>> sendVerification(
+            @Valid @RequestBody ResendVerificationRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        log.info("회원가입 전 이메일 인증번호 전송 요청: clientIp={}, userAgent={}, email={}", 
+                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()));
+        
+        try {
+            emailVerificationService.sendVerificationForSignup(request.getEmail());
+            
+            log.info("회원가입 전 이메일 인증번호 전송 성공: clientIp={}, email={}", 
+                    clientIp, maskEmail(request.getEmail()));
+            
+            return ResponseEntity.ok(
+                ApiResponse.success(Collections.emptyMap(), "인증번호를 전송했습니다.")
+            );
+            
+        } catch (EmailVerificationException e) {
+            log.warn("회원가입 전 이메일 인증번호 전송 실패: clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (CustomException e) {
+            log.warn("회원가입 전 이메일 인증번호 전송 실패(Custom): clientIp={}, email={}, error={}", 
+                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(
+                ApiResponse.error(e.getErrorCode().name(), e.getMessage())
+            );
+        } catch (Exception e) {
+            log.error("회원가입 전 이메일 인증번호 전송 중 예외 발생: clientIp={}, email={}", 
+                    clientIp, maskEmail(request.getEmail()), e);
+            return ResponseEntity.internalServerError().body(
+                ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
+            );
+        }
+    }
+
+    /**
      * 인증 이메일 재전송
      * POST /api/auth/resend-verification
      * 

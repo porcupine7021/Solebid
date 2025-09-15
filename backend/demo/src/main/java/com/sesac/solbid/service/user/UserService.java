@@ -51,14 +51,8 @@ public class UserService {
         User user = requestDto.toEntity(encodedPassword);
         User savedUser = userRepository.save(user);
         
-        // 회원가입 완료 후 이메일 인증 메일 자동 전송
-        try {
-            emailVerificationService.sendVerificationEmail(savedUser.getEmail());
-        } catch (Exception e) {
-            // 이메일 전송 실패 시 로그만 남기고 회원가입은 성공으로 처리
-            // 사용자는 나중에 재전송을 요청할 수 있음
-            log.warn("회원가입 후 이메일 인증 메일 전송 실패: {}", savedUser.getEmail(), e);
-        }
+        // 회원가입 전에 이미 이메일 인증을 완료했으므로 인증 상태를 true로 설정
+        savedUser.verifyEmail();
         
         return savedUser;
     }
