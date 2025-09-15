@@ -1,9 +1,9 @@
-import { Fragment, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { SearchHeader, SearchHistory, SearchProduct, SearchRankingList, } from '../components';
-import { products, searches } from '../components/mockData';
-import { useSearchRanking } from '../hooks/useSearchRanking';
-import type { SearchRanking } from '../types/SearchRankingProps';
+import {Fragment, useMemo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {SearchHeader, SearchHistory, SearchProduct, SearchRankingList,} from '../components';
+import {products, searches} from '../components/mockData';
+import {useSearchRanking} from '../hooks/useSearchRanking';
+import type {SearchRanking} from '../types/SearchRankingProps';
 
 const SearchPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -11,14 +11,14 @@ const SearchPage = () => {
 
     const navigate = useNavigate();
 
-    const { data: rankingProducts, isLoading, isError } = useSearchRanking();
+    const {data: rankingProducts, isLoading, isError} = useSearchRanking();
 
     const rankings = useMemo(() => {
         return (rankingProducts ?? []).map(
             (p, index): SearchRanking => ({
                 id: p.id,
                 rank: index + 1,
-                image: p.imageUrl || p.image || '',
+                image: p.image || '',
                 name: p.name || '',
                 currentBid: p.currentBid ?? 0,
                 bidders: p.bidders,
@@ -76,7 +76,7 @@ const SearchPage = () => {
             />
             <div className="h-full overflow-y-auto pb-20">
                 {searchQuery ? (
-                    <SearchProduct products={filteredProducts} />
+                    <SearchProduct products={filteredProducts}/>
                 ) : (
                     <Fragment>
                         <SearchHistory

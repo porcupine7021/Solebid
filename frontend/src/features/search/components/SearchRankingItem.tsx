@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { getFormatPrice } from '../../../utils/get-format-price';
 import type { SearchRanking } from '../types/SearchRankingProps';
+import { getFormatPrice } from '../../../utils/get-format-price';
 
 const SearchRankingItem = ({ rank, image, name, currentBid, bidders }: SearchRanking) => (
     <Link

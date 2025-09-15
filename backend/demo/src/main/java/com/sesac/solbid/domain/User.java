@@ -63,6 +63,13 @@ public class User extends BaseEntity implements UserDetails {
     @Column
     private LocalDateTime withdrawnAt;
 
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private Boolean emailVerified;
+
+    @Column
+    private LocalDateTime emailVerifiedAt;
+
     //== 연관관계 편의 메서드 ==//
     @OneToMany(mappedBy = "user")
     private List<SocialLogin> socialLogins = new ArrayList<>();
@@ -98,7 +105,8 @@ public class User extends BaseEntity implements UserDetails {
         this.temperature = new BigDecimal("36.5");
         this.point = BigDecimal.ZERO;
         this.userStatus = UserStatus.ACTIVE;
-        // withdrawnAt 기본값은 null
+        this.emailVerified = false;
+        // withdrawnAt, emailVerifiedAt 기본값은 null
     }
 
     // 닉네임 동기화용 업데이트 메서드
@@ -127,6 +135,12 @@ public class User extends BaseEntity implements UserDetails {
             this.userStatus = UserStatus.ACTIVE;
             this.withdrawnAt = null;
         }
+    }
+
+    // 이메일 인증 처리
+    public void verifyEmail() {
+        this.emailVerified = true;
+        this.emailVerifiedAt = LocalDateTime.now();
     }
 
     // UserDetails Impl

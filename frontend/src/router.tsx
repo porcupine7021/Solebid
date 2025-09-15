@@ -21,6 +21,8 @@ import OAuth2Callback from "./features/user/pages/OAuth2Callback.tsx";
 import Signup from "./features/user/pages/Signup.tsx";
 import FindPassword from './features/user/pages/FindPassword';
 import ResetPassword from './features/user/pages/ResetPassword';
+import EmailVerificationPage from './features/user/pages/EmailVerificationPage';
+import EmailVerificationSuccess from './features/user/pages/EmailVerificationSuccess';
 
 import AppLayout from "./components/AppLayout.tsx";
 import ProtectedRoute from './features/user/components/ProtectedRoute';
@@ -57,6 +59,8 @@ const router = createBrowserRouter(
             <Route path="/transaction/:orderId" element={<ProtectedRoute><TransactionDetailPage /></ProtectedRoute>} />
             <Route path="/find-password" element={<FindPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/email-verification" element={<EmailVerificationPage />} />
+            <Route path="/email-verification-success" element={<EmailVerificationSuccess />} />
         </Route>
     )
 )
