@@ -1,18 +1,17 @@
-import {useMemo, useState} from "react";
-import {useWishes} from "../../wish/hooks/useWishes.ts";
-import {AuctionList, AuctionModal, AuctionSearch} from "../components";
-import {categories, sortOptions} from "../components/mockData";
-import type {AuctionItem} from "../types/AuctionItem";
-import {useAuctions} from "../hooks/useAuctions.ts";
+import { useMemo, useState } from "react";
+import { useWishes } from "../../wish/hooks/useWishes.ts";
+import { AuctionList, AuctionModal, AuctionSearch } from "../components";
+import { categories, sortOptions } from "../components/mockData";
+import { useAuctions } from "../hooks/useAuctions.ts";
+import type { AuctionItem } from "../types/AuctionItem";
 
 const AuctionPage = () => {
-    const {data: products, isLoading, isError, error} = useAuctions();
-    const {wishes, addWish, removeWish, isAdding, isRemoving} = useWishes();
+    const { auctions: products, isLoading, isError, error } = useAuctions();
+    const { wishes, addWish, removeWish, isAdding, isRemoving } = useWishes();
 
     const wishedIds = useMemo(() => new Set(
-            wishes?.map(wish => wish.id) ?? []
-        ),
-        [wishes]
+        wishes?.map(wish => wish.id) ?? []
+    ), [wishes]
     );
 
     const [selectedCategory, setSelectedCategory] = useState('전체');
@@ -23,7 +22,7 @@ const AuctionPage = () => {
 
     const processedItems = useMemo(() => {
         return (products ?? []).map(item =>
-            ({...item, isWished: wishedIds.has(item.id)})
+            ({ ...item, isWished: wishedIds.has(item.id) })
         );
     }, [products, wishedIds]);
 
@@ -73,7 +72,7 @@ const AuctionPage = () => {
 
     if (isError) {
         return (
-            <div>Error: {error.message}</div>
+            <div>Error: {error ? error.message : 'An unknown error occurred'}</div>
         );
     }
 
