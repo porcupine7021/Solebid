@@ -34,7 +34,7 @@ const AuctionItem = ({item, addWish, removeWish, isAdding, isRemoving, onBidClic
         <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative h-64">
                 <img
-                    src={`${S3_BASE_URL}/${item.image}`}
+                    src={item.imageUrl || `${S3_BASE_URL}/${item.image}`}
                     alt={item.name}
                     className="w-full h-full object-cover"
                 />
