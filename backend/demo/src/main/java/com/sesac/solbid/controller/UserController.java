@@ -48,8 +48,12 @@ public class UserController {
         User user = userService.signup(requestDto);
         SignupResponse responseDto = new SignupResponse(user);
 
+        String message = String.format("회원가입이 완료되었습니다! %s로 인증 이메일을 전송했습니다. " +
+                "이메일을 확인하여 계정을 활성화해주세요. (스팸함도 확인해보세요)", 
+                user.getEmail());
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(responseDto));
+                .body(ApiResponse.success(responseDto, message));
     }
 
     // 로그인
@@ -93,6 +97,19 @@ public class UserController {
                     ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );
         }
+    }
+
+    // 이메일 중복 확인
+    @GetMapping("/email/available")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> isEmailAvailable(
+            @RequestParam("email") String email) {
+        boolean available = userService.isEmailAvailable(email);
+        Map<String, Object> data = new HashMap<>();
+        data.put("available", available);
+        data.put("email", email);
+        
+        String message = available ? "사용 가능한 이메일입니다." : "이미 사용 중인 이메일입니다.";
+        return ResponseEntity.ok(ApiResponse.success(data, message));
     }
 
     // 닉네임 가용성 확인

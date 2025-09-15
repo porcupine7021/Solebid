@@ -1,17 +1,17 @@
-import {MainBrandList, MainCategoryList, MainHeroSection, MainProductList} from '../components';
-import {categories, heroImage, popularBrands} from '../components/mockData';
-import {useMainProducts} from '../hooks/useMainProducts';
-import {useMemo} from 'react';
-import type {MainProduct} from '../types/MainProductProps';
+import { useMemo } from 'react';
+import { MainBrandList, MainCategoryList, MainHeroSection, MainProductList } from '../components';
+import { categories, heroImage, popularBrands } from '../components/mockData';
+import { useMainProducts } from '../hooks/useMainProducts';
+import type { MainProduct } from '../types/MainProductProps';
 
 const MainPage = () => {
-    const {data: auctionProducts, isLoading, isError} = useMainProducts();
+    const { products: auctionProducts, isLoading, isError } = useMainProducts();
 
     const products = useMemo(() => {
         return (auctionProducts ?? []).map(
             (p): MainProduct => ({
                 id: p.id,
-                image: p.image || '',
+                image: p.imageUrl || p.image || '',
                 name: p.name || '',
                 price: p.currentBid ?? 0,
                 bidCount: p.bidders,
@@ -47,8 +47,6 @@ const MainPage = () => {
             />
             <MainProductList
                 products={products}
-                // filter={filter}
-                // onFilterChange={setFilter}
             />
         </div>
     );

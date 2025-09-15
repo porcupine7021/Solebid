@@ -57,6 +57,12 @@ export function useEmailLogin() {
         } else {
           setErrors({ submit: result.message || '재활성화 토큰을 확인할 수 없습니다.' });
         }
+      } else if (result?.errorCode === 'EMAIL_NOT_VERIFIED') {
+        // 이메일 인증 페이지로 리다이렉트
+        navigate('/email-verification', { 
+          state: { email: loginForm.email },
+          replace: true 
+        });
       } else {
         setErrors({ submit: result.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.' });
       }
