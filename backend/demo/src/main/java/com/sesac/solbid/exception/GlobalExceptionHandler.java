@@ -1,6 +1,7 @@
 package com.sesac.solbid.exception;
 
 import com.sesac.solbid.dto.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import jakarta.servlet.http.HttpServletRequest;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -80,6 +82,39 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+    }
+
+    // 이메일 인증 관련 예외
+    @ExceptionHandler(EmailVerificationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailVerificationException(EmailVerificationException e) {
+        ErrorCode code = e.getErrorCode();
+        
+        // 이메일 인증 관련 예외는 추가 로깅
+        String maskedEmail = e.getMaskedEmail();
+        String additionalInfo = e.getAdditionalInfo();
+        
+        if (additionalInfo != null) {
+            log.warn("이메일 인증 예외 발생: {} - {} ({})", code.name(), maskedEmail, additionalInfo);
+        } else {
+            log.warn("이메일 인증 예외 발생: {} - {}", code.name(), maskedEmail);
+        }
+        
+        // 재전송 제한 관련 예외의 경우 추가 정보 제공
+        if (code == ErrorCode.EMAIL_VERIFICATION_RESEND_TOO_FREQUENT || 
+            code == ErrorCode.EMAIL_VERIFICATION_RESEND_LIMIT_EXCEEDED) {
+            
+            Object data = null;
+            if (additionalInfo != null) {
+                // 추가 정보가 있는 경우 (예: 남은 시간, 재시도 가능 시간 등)
+                data = java.util.Map.of("additionalInfo", additionalInfo);
+            }
+            
+            return ResponseEntity.status(code.getStatus())
+                    .body(ApiResponse.error(data, code.name(), code.getMessage()));
+        }
+        
+        return ResponseEntity.status(code.getStatus())
+                .body(ApiResponse.error(code.name(), code.getMessage()));
     }
 
     // 커스텀 예외

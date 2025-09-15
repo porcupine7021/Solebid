@@ -1,5 +1,3 @@
-// src/main/java/com/sesac/solbid/service/UserService.java
-
 package com.sesac.solbid.service.user;
 
 import com.sesac.solbid.domain.SocialLogin;
@@ -17,6 +15,7 @@ import com.sesac.solbid.repository.SocialLoginRepository;
 import com.sesac.solbid.repository.UserRepository;
 import com.sesac.solbid.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +25,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,6 +35,7 @@ public class UserService {
     private final SocialLoginRepository socialLoginRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailVerificationService emailVerificationService;
 
     private static final long WITHDRAWAL_GRACE_DAYS = 30L;
 
@@ -48,7 +49,12 @@ public class UserService {
         }
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         User user = requestDto.toEntity(encodedPassword);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        
+        // 회원가입 전에 이미 이메일 인증을 완료했으므로 인증 상태를 true로 설정
+        savedUser.verifyEmail();
+        
+        return savedUser;
     }
 
     @Transactional
@@ -72,6 +78,11 @@ public class UserService {
             throw new CustomException(ErrorCode.INACTIVE_USER);
         }
 
+        // 이메일 인증 확인 (소셜 로그인 사용자는 제외)
+        if (user.getPassword() != null && !user.getEmailVerified()) {
+            throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
         final String accessToken = jwtUtil.generateToken(user.getEmail());
         final String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
@@ -87,6 +98,14 @@ public class UserService {
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+    }
+
+    // 이메일 중복 확인
+    public boolean isEmailAvailable(String email) {
+        if (email == null || email.isBlank()) return false;
+        // 기본적인 이메일 형식 검증
+        if (!email.contains("@") || !email.contains(".")) return false;
+        return userRepository.findByEmail(email).isEmpty();
     }
 
     // 닉네임 가용성 확인

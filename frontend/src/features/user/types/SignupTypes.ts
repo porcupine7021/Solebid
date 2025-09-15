@@ -5,6 +5,7 @@ export interface SignupFormData {
   nickname: string;
   name: string;
   phone: string;
+  verificationCode: string;
 }
 
 export interface Agreements {
@@ -23,6 +24,7 @@ export interface SignupErrors {
   phone: string;
   agreeTerms: string;
   agreePrivacy: string;
+  verificationCode: string;
 }
 
 export interface SignupRequest {

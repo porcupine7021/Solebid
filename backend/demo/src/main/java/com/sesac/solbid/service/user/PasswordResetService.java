@@ -19,7 +19,7 @@ public class PasswordResetService {
     private final SocialLoginRepository socialLoginRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenService tokenService;
-    private final ResetMailService resetMailService;
+    private final EmailService emailService;
 
     @Value("${app.frontend.base-url:http://localhost:5173}")
     private String frontendBaseUrl;
@@ -36,7 +36,7 @@ public class PasswordResetService {
 
         String token = tokenService.createToken(email);
         String link = frontendBaseUrl + "/reset-password?token=" + token;
-        resetMailService.sendPasswordResetMail(email, link);
+        emailService.sendPasswordResetMail(email, link);
     }
 
     @Transactional
