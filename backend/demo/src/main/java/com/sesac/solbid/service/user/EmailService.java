@@ -97,6 +97,30 @@ public class EmailService {
         }
     }
 
+    /**
+     * 비밀번호 재설정 OTP 이메일 전송
+     */
+    @Retryable(
+        retryFor = {IOException.class, GeneralSecurityException.class, MessagingException.class},
+        maxAttempts = MAX_RETRY_ATTEMPTS,
+        backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    public void sendPasswordResetOtp(String to, String otp) {
+        try {
+            Gmail service = createGmailService();
+            
+            String subject = "[SoleBid] 비밀번호 재설정 인증번호 안내";
+            String htmlContent = createPasswordResetOtpTemplate(otp);
+            
+            sendEmail(service, to, subject, htmlContent);
+            log.info("비밀번호 재설정 OTP 발송 성공: {}", maskEmail(to));
+            
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 발송 실패: {}", maskEmail(to), e);
+            throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
+        }
+    }
+
 
 
     /**
@@ -177,6 +201,34 @@ public class EmailService {
                 </div>
             </div>
             """.formatted(verificationCode);
+    }
+
+    /**
+     * 비밀번호 재설정 OTP 이메일 템플릿
+     */
+    private String createPasswordResetOtpTemplate(String otp) {
+        return """
+            <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-bottom: 3px solid #dc3545;">
+                    <h1 style="color: #dc3545; margin: 0;">SoleBid</h1>
+                </div>
+                <div style="padding: 30px 20px;">
+                    <h2 style="color: #333; margin-bottom: 20px;">비밀번호 재설정 인증번호 안내</h2>
+                    <p style="margin-bottom: 20px;">안녕하세요!</p>
+                    <p style="margin-bottom: 20px;">비밀번호 재설정을 요청하셨습니다. 아래 인증번호를 입력하여 새로운 비밀번호를 설정해주세요.</p>
+                    <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border: 2px dashed #dc3545; border-radius: 10px;">
+                        <p style="margin: 0 0 10px 0; font-size: 16px; color: #666;">인증번호</p>
+                        <div style="font-size: 32px; font-weight: bold; color: #dc3545; letter-spacing: 8px; font-family: 'Courier New', monospace;">%s</div>
+                    </div>
+                    <p style="margin-bottom: 10px; color: #666; font-size: 14px;">⚠️ 이 인증번호는 5분 후에 만료됩니다.</p>
+                    <p style="margin-bottom: 10px; color: #666; font-size: 14px;">🔒 보안을 위해 인증번호를 타인과 공유하지 마세요.</p>
+                    <p style="margin-bottom: 20px; color: #666; font-size: 14px;">만약 비밀번호 재설정을 요청하지 않으셨다면, 이 이메일을 무시해주세요.</p>
+                </div>
+                <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #dee2e6; font-size: 12px; color: #666;">
+                    <p>© 2025 SoleBid. All rights reserved.</p>
+                </div>
+            </div>
+            """.formatted(otp);
     }
 
 
