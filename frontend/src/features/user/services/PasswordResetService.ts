@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types/AuthTypes';
+import type { ApiResponse, OtpStatusResponse } from '../types/AuthTypes';
 
 const jsonHeaders = { 'Content-Type': 'application/json' } as const;
 
@@ -11,6 +11,22 @@ export async function requestPasswordResetOtp(email: string): Promise<ApiRespons
     headers: jsonHeaders,
     credentials: 'include',
     body: JSON.stringify({ email }),
+  });
+  return res.json();
+}
+
+/**
+ * OTP 검증만 수행 (비밀번호 재설정 없이)
+ */
+export async function verifyPasswordResetOtp(
+  email: string, 
+  otp: string
+): Promise<ApiResponse> {
+  const res = await fetch('/api/auth/password/verify-otp', {
+    method: 'POST',
+    headers: jsonHeaders,
+    credentials: 'include',
+    body: JSON.stringify({ email, otp }),
   });
   return res.json();
 }
