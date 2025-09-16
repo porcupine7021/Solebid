@@ -45,3 +45,14 @@ export async function resendPasswordResetOtp(email: string): Promise<ApiResponse
   return res.json();
 }
 
+/**
+ * OTP 상태 조회 (타이머용)
+ */
+export async function getOtpStatus(email: string): Promise<ApiResponse<OtpStatusResponse>> {
+  const res = await fetch(`/api/auth/password/otp-status?email=${encodeURIComponent(email)}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return res.json();
+}
+
