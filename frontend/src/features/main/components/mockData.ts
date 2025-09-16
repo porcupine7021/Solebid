@@ -1,4 +1,4 @@
-import type { MainBrand } from "../types/MainBrandListProps";
+import type { MainBrand } from "../types/MainBrandProps";
 import type { MainCategory } from "../types/MainCategoryProps";
 
 export const heroImage =
