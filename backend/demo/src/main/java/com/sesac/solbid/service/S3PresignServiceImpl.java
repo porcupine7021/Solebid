@@ -30,6 +30,9 @@ public class S3PresignServiceImpl implements S3Service {
     @Value("${spring.cloud.aws.region.static:}")
     private String regionStr;
 
+    @Value("${app.s3.presign.expire-minutes:15}")
+    private long defaultExpireMinutes;
+
     @Override
     public String presignPutUrl(String key, String contentType) {
         try {
@@ -63,25 +66,26 @@ public class S3PresignServiceImpl implements S3Service {
         }
 
 
-        @Override
-        public String presignGetUrl(String key) {
-            Objects.requireNonNull(key, "key must not be null");
+    }
 
-            GetObjectRequest get = GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
+    @Override
+    public String presignGetUrl (String key){
+        Objects.requireNonNull(key, "key must not be null");
 
-            GetObjectPresignRequest req = GetObjectPresignRequest.builder()
-                    .getObjectRequest(get)
-                    .signatureDuration(Duration.ofMinutes(defaultExpireMinutes))
-                    .build();
+        GetObjectRequest get = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
 
-            PresignedGetObjectRequest presigned = presigner.presignGetObject(req);
+        GetObjectPresignRequest req = GetObjectPresignRequest.builder()
+                .getObjectRequest(get)
+                .signatureDuration(Duration.ofMinutes(
+                        defaultExpireMinutes))
+                .build();
 
-            return presigned.url().toString();
-        }
+        PresignedGetObjectRequest presigned = presigner.presignGetObject(req);
 
+        return presigned.url().toString();
     }
 
 }
