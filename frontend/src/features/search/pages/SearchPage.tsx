@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getFormatPrice } from '../../../utils/get-format-price';
-import { SearchHeader, SearchHistory, SearchProduct, SearchRankingList } from '../components';
-import { useSearchProducts } from '../hooks/useSearchProducts';
-import { useSearchRanking } from '../hooks/useSearchRanking';
-import type { SearchProduct as SearchProductType } from '../types/SearchProductProps';
-import type { SearchRanking } from '../types/SearchRankingProps';
+import {useEffect, useMemo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {getFormatPrice} from '../../../utils/get-format-price';
+import {SearchHeader, SearchHistory, SearchProduct, SearchRankingList} from '../components';
+import {useSearchProducts} from '../hooks/useSearchProducts';
+import {useSearchRanking} from '../hooks/useSearchRanking';
+import type {SearchProduct as SearchProductType} from '../types/SearchProductProps';
+import type {SearchRanking} from '../types/SearchRankingProps';
 
 const SearchPage = () => {
     const navigate = useNavigate();
@@ -86,13 +86,13 @@ const SearchPage = () => {
         if (trimmedQuery === '') {
             return;
         }
-        
+
         setSubmittedQuery(trimmedQuery);
 
         const updatedRecentSearches = [
             trimmedQuery,
             ...recentSearches.filter((s) => s !== trimmedQuery),
-        ];
+        ].slice(0, 10);
 
         setRecentSearches(updatedRecentSearches);
     };
@@ -102,7 +102,7 @@ const SearchPage = () => {
             if (isSearchLoading) {
                 return (
                     <div className="flex justify-center items-center pt-10">
-                        <i className="fas fa-spinner fa-spin fa-3x" />
+                        <i className="fas fa-spinner fa-spin fa-3x"/>
                     </div>
                 );
             }
@@ -112,12 +112,12 @@ const SearchPage = () => {
         if (isRankingLoading) {
             return (
                 <div className="flex justify-center items-center pt-10">
-                    <i className="fas fa-spinner fa-spin fa-3x" />
+                    <i className="fas fa-spinner fa-spin fa-3x"/>
                 </div>
             );
         }
 
-        return <SearchRankingList items={rankings} />;
+        return <SearchRankingList items={rankings}/>;
     };
 
     if (isRankingError || isSearchError) {
