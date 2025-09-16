@@ -17,6 +17,8 @@ const FindPassword: React.FC = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpTimer, setOtpTimer] = useState(0); // OTP 만료 타이머 (초)
+  const [otpExpired, setOtpExpired] = useState(false);
 
   // 재전송 쿨다운 타이머
   useEffect(() => {
@@ -27,6 +29,20 @@ const FindPassword: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
+
+  // OTP 만료 타이머
+  useEffect(() => {
+    if (otpTimer > 0) {
+      const timer = setTimeout(() => {
+        setOtpTimer(otpTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (otpTimer === 0 && step === 'otp' && !otpExpired) {
+      // 타이머가 0이 되면 만료 처리
+      setOtpExpired(true);
+      setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+    }
+  }, [otpTimer, step, otpExpired]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +57,8 @@ const FindPassword: React.FC = () => {
       if (res.success) {
         setStep('otp');
         setResendCooldown(60); // 1분 쿨다운
+        setOtpTimer(300); // 5분 OTP 만료 시간 (300초)
+        setOtpExpired(false);
       } else {
         setError(res.message || '요청 실패');
       }
@@ -129,6 +147,8 @@ const FindPassword: React.FC = () => {
       if (res.success) {
         setResendCooldown(60); // 1분 쿨다운
         setOtp(''); // OTP 입력 필드 초기화
+        setOtpTimer(300); // 5분 OTP 만료 시간 재설정
+        setOtpExpired(false); // 만료 상태 초기화
       } else {
         setError(res.message || '인증번호 재전송에 실패했습니다');
       }
@@ -143,6 +163,26 @@ const FindPassword: React.FC = () => {
     setOtp(value);
     if (error && error.includes('인증번호')) {
       setError(null);
+    }
+  };
+
+  // 시간을 MM:SS 형식으로 포맷
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // 남은 시간에 따른 스타일 결정
+  const getTimerStyle = (): string => {
+    if (otpExpired || otpTimer <= 0) {
+      return 'text-red-600 font-semibold';
+    } else if (otpTimer < 60) {
+      // 1분 미만: 빨간색
+      return 'text-red-500 font-semibold';
+    } else {
+      // 1분 이상: 회색
+      return 'text-gray-600';
     }
   };
 
@@ -163,6 +203,8 @@ const FindPassword: React.FC = () => {
       setStep('email');
       setOtp('');
       setError(null);
+      setOtpExpired(false);
+      setOtpTimer(0);
     } else if (step === 'password') {
       setStep('otp');
       setNewPassword('');
@@ -202,9 +244,20 @@ const FindPassword: React.FC = () => {
         <VerificationCodeInput
           value={otp}
           onChange={handleOtpChange}
-          disabled={loading}
+          disabled={loading || otpExpired}
           error={error !== null && error.includes('인증번호')}
         />
+        
+        {/* OTP 타이머 표시 */}
+        <div className="mt-3 text-center">
+          <div className={`text-sm mb-2 ${getTimerStyle()}`}>
+            {otpExpired || otpTimer <= 0 
+              ? '인증번호가 만료되었습니다' 
+              : `남은 시간: ${formatTime(otpTimer)}`
+            }
+          </div>
+        </div>
+        
         <div className="mt-3 text-center">
           <button
             type="button"
@@ -224,7 +277,7 @@ const FindPassword: React.FC = () => {
       {error && <div className="text-xs text-red-500 text-center">{error}</div>}
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || otpExpired}
         className="w-full py-3 bg-blue-600 text-white font-medium !rounded-button hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
       >
         {loading ? '확인 중...' : '인증번호 확인'}

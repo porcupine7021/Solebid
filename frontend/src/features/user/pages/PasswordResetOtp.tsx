@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { verifyOtpAndResetPassword, resendPasswordResetOtp } from '../services/PasswordResetService';
 import VerificationCodeInput from '../components/VerificationCodeInput';
-import OtpTimer from '../components/OtpTimer';
 import type { ApiResponse } from '../types/AuthTypes';
 
 const PasswordResetOtp: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get('email') || '';
-  
+
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,8 +16,8 @@ const PasswordResetOtp: React.FC = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpTimer, setOtpTimer] = useState(300); // OTP 만료 타이머 (초) - 5분으로 초기화
   const [isOtpExpired, setIsOtpExpired] = useState(false);
-  const [timerKey, setTimerKey] = useState(0); // 타이머 리셋을 위한 키
 
   // 에러 메시지 안전 추출 헬퍼
   const extractErrorMessage = (err: unknown, fallback: string): string => {
@@ -48,6 +47,20 @@ const PasswordResetOtp: React.FC = () => {
     }
   }, [resendCooldown]);
 
+  // OTP 만료 타이머
+  useEffect(() => {
+    if (otpTimer > 0) {
+      const timer = setTimeout(() => {
+        setOtpTimer(otpTimer - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (otpTimer === 0 && !isOtpExpired) {
+      // 타이머가 0이 되면 만료 처리
+      setIsOtpExpired(true);
+      setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+    }
+  }, [otpTimer, isOtpExpired]);
+
   const validatePassword = (password: string): string | null => {
     if (!password || password.length < 8) {
       return '비밀번호는 8자 이상이어야 합니다.';
@@ -62,23 +75,23 @@ const PasswordResetOtp: React.FC = () => {
     if (isOtpExpired) {
       return '인증번호가 만료되었습니다. 재전송을 요청하세요.';
     }
-    
+
     if (!otp || otp.length !== 6) {
       return '6자리 인증번호를 입력하세요.';
     }
     if (!/^\d{6}$/.test(otp)) {
       return '인증번호는 숫자만 입력 가능합니다.';
     }
-    
+
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
       return passwordError;
     }
-    
+
     if (newPassword !== confirmPassword) {
       return '비밀번호가 일치하지 않습니다.';
     }
-    
+
     return null;
   };
 
@@ -120,8 +133,8 @@ const PasswordResetOtp: React.FC = () => {
       if (res.success) {
         setResendCooldown(60); // 1분 쿨다운
         setOtp(''); // OTP 입력 필드 초기화
+        setOtpTimer(300); // 5분 OTP 만료 시간 재설정
         setIsOtpExpired(false); // 만료 상태 리셋
-        setTimerKey(prev => prev + 1); // 타이머 리셋을 위해 키 변경
       } else {
         setError(res.message || '인증번호 재전송에 실패했습니다.');
       }
@@ -146,23 +159,30 @@ const PasswordResetOtp: React.FC = () => {
     } else {
       setNewPassword(value);
     }
-    
+
     // 비밀번호 관련 에러가 있으면 실시간으로 검증
     if (error && (error.includes('비밀번호') || error.includes('일치'))) {
       setError(null);
     }
   };
 
-  // 타이머 만료 시 처리
-  const handleTimerExpired = () => {
-    setIsOtpExpired(true);
+  // 시간을 MM:SS 형식으로 포맷
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // 타이머 시간 업데이트 처리
-  const handleTimeUpdate = (seconds: number) => {
-    // 만료되지 않은 상태에서 시간이 업데이트되면 만료 상태 해제
-    if (seconds > 0 && isOtpExpired) {
-      setIsOtpExpired(false);
+  // 남은 시간에 따른 스타일 결정
+  const getTimerStyle = (): string => {
+    if (isOtpExpired || otpTimer <= 0) {
+      return 'text-red-600 font-semibold';
+    } else if (otpTimer < 60) {
+      // 1분 미만: 빨간색
+      return 'text-red-500 font-semibold';
+    } else {
+      // 1분 이상: 회색
+      return 'text-gray-600';
     }
   };
 
@@ -185,18 +205,17 @@ const PasswordResetOtp: React.FC = () => {
               disabled={loading || isOtpExpired}
               error={error !== null && error.includes('인증번호')}
             />
-            
-            {/* OTP 타이머 */}
+
+            {/* OTP 타이머 표시 */}
             <div className="mt-2 text-center">
-              <OtpTimer
-                key={timerKey}
-                email={email}
-                onExpired={handleTimerExpired}
-                onTimeUpdate={handleTimeUpdate}
-                className="mb-2"
-              />
+              <div className={`text-sm mb-2 ${getTimerStyle()}`}>
+                {isOtpExpired || otpTimer <= 0
+                  ? '인증번호가 만료되었습니다'
+                  : `남은 시간: ${formatTime(otpTimer)}`
+                }
+              </div>
             </div>
-            
+
             <div className="mt-3 text-center">
               <button
                 type="button"

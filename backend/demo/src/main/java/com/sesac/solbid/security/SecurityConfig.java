@@ -56,8 +56,7 @@ public class SecurityConfig {
                                 "/api/auth/password/request-reset",
                                 "/api/auth/password/verify-otp",
                                 "/api/auth/password/verify-and-reset",
-                                "/api/auth/password/resend-otp",
-                                "/api/auth/password/otp-status"
+                                "/api/auth/password/resend-otp"
                         ).permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()

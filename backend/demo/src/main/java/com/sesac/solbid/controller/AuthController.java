@@ -29,7 +29,7 @@ import com.sesac.solbid.dto.auth.request.PasswordResetRequest;
 import com.sesac.solbid.dto.auth.request.PasswordResetOtpVerifyRequest;
 import com.sesac.solbid.dto.auth.request.PasswordResetVerifyRequest;
 import com.sesac.solbid.dto.auth.request.ResendOtpRequest;
-import com.sesac.solbid.dto.auth.response.OtpStatusResponse;
+
 
 /**
  * 인증 컨트롤러
@@ -323,37 +323,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * 비밀번호 재설정 OTP 상태 조회
-     * GET /api/auth/password/otp-status
-     */
-    @GetMapping("/password/otp-status")
-    public ResponseEntity<ApiResponse<OtpStatusResponse>> getOtpStatus(
-            @RequestParam String email,
-            HttpServletRequest httpRequest) {
-        
-        String clientIp = getClientIpAddress(httpRequest);
-        log.debug("비밀번호 재설정 OTP 상태 조회: email={}, clientIp={}", maskEmail(email), clientIp);
-        
-        try {
-            OtpStatusResponse otpStatus = passwordResetService.getOtpStatus(email);
-            
-            log.debug("비밀번호 재설정 OTP 상태 조회 완료: email={}, clientIp={}, exists={}, remainingTime={}", 
-                    maskEmail(email), clientIp, otpStatus.isExists(), otpStatus.getRemainingTimeSeconds());
-            return ResponseEntity.ok(ApiResponse.success(otpStatus, "OTP 상태 조회가 완료되었습니다."));
-            
-        } catch (CustomException e) {
-            log.warn("비밀번호 재설정 OTP 상태 조회 실패: email={}, clientIp={}, error={}", 
-                    maskEmail(email), clientIp, e.getMessage());
-            return ResponseEntity.status(e.getErrorCode().getStatus())
-                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
-        } catch (Exception e) {
-            log.error("비밀번호 재설정 OTP 상태 조회 중 예외 발생: email={}, clientIp={}", 
-                    maskEmail(email), clientIp, e);
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
-        }
-    }
+
 
     /**
      * 클라이언트 IP 주소 추출 (프록시 고려)

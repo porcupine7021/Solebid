@@ -33,9 +33,4 @@ export interface TokenStatus {
   refreshAvailable: boolean;
 }
 
-export interface OtpStatusResponse {
-  exists: boolean;           // OTP 존재 여부
-  remainingTimeSeconds: number; // 남은 시간 (초)
-  expired: boolean;          // 만료 여부
-  remainingAttempts: number; // 남은 시도 횟수
-}
+

@@ -1,7 +1,7 @@
 package com.sesac.solbid.service.user;
 
 import com.sesac.solbid.domain.User;
-import com.sesac.solbid.dto.auth.response.OtpStatusResponse;
+
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.exception.PasswordResetExceptionUtils;
@@ -147,41 +147,7 @@ public class PasswordResetService {
         log.info("비밀번호 재설정 OTP 재전송 완료: {}", maskEmail(email));
     }
 
-    /**
-     * OTP 상태 조회 (타이머용)
-     * @param email 조회할 이메일 주소
-     * @return OTP 상태 정보
-     */
-    @Transactional(readOnly = true)
-    public OtpStatusResponse getOtpStatus(String email) {
-        log.debug("OTP 상태 조회: {}", maskEmail(email));
-        
-        // 토큰 존재 여부 및 상태 확인
-        boolean exists = tokenService.hasValidToken(email);
-        
-        if (!exists) {
-            return OtpStatusResponse.builder()
-                    .exists(false)
-                    .remainingTimeSeconds(0)
-                    .expired(true)
-                    .remainingAttempts(0)
-                    .build();
-        }
-        
-        // 남은 시간 조회
-        long remainingTimeSeconds = tokenService.getRemainingTimeSeconds(email);
-        boolean expired = remainingTimeSeconds <= 0;
-        
-        // 남은 시도 횟수 조회
-        int remainingAttempts = tokenService.getRemainingAttempts(email);
-        
-        return OtpStatusResponse.builder()
-                .exists(true)
-                .remainingTimeSeconds(Math.max(0, remainingTimeSeconds))
-                .expired(expired)
-                .remainingAttempts(Math.max(0, remainingAttempts))
-                .build();
-    }
+
 
     /**
      * 재전송 제한을 검증합니다.
