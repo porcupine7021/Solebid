@@ -1,6 +1,6 @@
-import {useEffect, useState} from 'react';
-import type {AuctionItem} from "../features/auction/types/AuctionItem.ts";
-import {getPresignedUrls} from '../features/product/services/ProductService.ts';
+import { useEffect, useState } from 'react';
+import type { AuctionItem } from "../features/auction/types/AuctionItem.ts";
+import { getPresignedUrls } from '../features/product/services/ProductService.ts';
 
 export const useProductImageUrls = (products: AuctionItem[]) => {
     const [productsWithImages, setProductsWithImages] = useState<AuctionItem[]>([]);
@@ -43,8 +43,8 @@ export const useProductImageUrls = (products: AuctionItem[]) => {
                 setIsLoadingImages(false);
             }
         };
-        fetchImageUrls().then(r => console.log(r));
+        fetchImageUrls();
     }, [imageKeysString]);
 
-    return {productsWithImages, isLoadingImages};
+    return { productsWithImages, isLoadingImages };
 };
