@@ -106,7 +106,7 @@ const SearchPage = () => {
                     </div>
                 );
             }
-            return <SearchProduct products={searchResultProducts}/>;
+            return <SearchProduct products={searchResultProducts} />;
         }
 
         if (isRankingLoading) {
