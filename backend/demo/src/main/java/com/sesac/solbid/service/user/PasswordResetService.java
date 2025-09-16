@@ -1,6 +1,7 @@
 package com.sesac.solbid.service.user;
 
 import com.sesac.solbid.domain.User;
+import com.sesac.solbid.dto.auth.response.OtpStatusResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.exception.PasswordResetExceptionUtils;
@@ -55,6 +56,32 @@ public class PasswordResetService {
             log.info("존재하지 않는 이메일로 비밀번호 재설정 요청: {}", maskEmail(email));
             // 보안상 동일한 응답을 제공하지만 실제로는 이메일을 발송하지 않음
         }
+    }
+
+    /**
+     * OTP 검증만 수행 (비밀번호 재설정 없이)
+     * @param email 이메일 주소
+     * @param otp 6자리 인증번호
+     * @return 검증된 이메일 주소
+     */
+    @Transactional(readOnly = true)
+    public String verifyOtpOnly(String email, String otp) {
+        log.info("비밀번호 재설정 OTP 검증: email={}, otp={}", maskEmail(email), maskOtp(otp));
+        
+        // 사용자 존재 여부 확인
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> PasswordResetExceptionUtils.userNotFound(email));
+        
+        // OTP 검증 및 토큰에서 이메일 확인
+        String tokenEmail = tokenService.getEmailIfValid(otp);
+        if (tokenEmail == null || !tokenEmail.equals(email)) {
+            log.warn("유효하지 않은 비밀번호 재설정 OTP 또는 이메일 불일치: email={}, tokenEmail={}, otp={}", 
+                    maskEmail(email), maskEmail(tokenEmail), maskOtp(otp));
+            throw PasswordResetExceptionUtils.invalidOtp(email);
+        }
+        
+        log.info("비밀번호 재설정 OTP 검증 성공: {}", maskEmail(email));
+        return email;
     }
 
     /**
@@ -118,6 +145,42 @@ public class PasswordResetService {
         emailService.sendPasswordResetOtp(email, otp);
         
         log.info("비밀번호 재설정 OTP 재전송 완료: {}", maskEmail(email));
+    }
+
+    /**
+     * OTP 상태 조회 (타이머용)
+     * @param email 조회할 이메일 주소
+     * @return OTP 상태 정보
+     */
+    @Transactional(readOnly = true)
+    public OtpStatusResponse getOtpStatus(String email) {
+        log.debug("OTP 상태 조회: {}", maskEmail(email));
+        
+        // 토큰 존재 여부 및 상태 확인
+        boolean exists = tokenService.hasValidToken(email);
+        
+        if (!exists) {
+            return OtpStatusResponse.builder()
+                    .exists(false)
+                    .remainingTimeSeconds(0)
+                    .expired(true)
+                    .remainingAttempts(0)
+                    .build();
+        }
+        
+        // 남은 시간 조회
+        long remainingTimeSeconds = tokenService.getRemainingTimeSeconds(email);
+        boolean expired = remainingTimeSeconds <= 0;
+        
+        // 남은 시도 횟수 조회
+        int remainingAttempts = tokenService.getRemainingAttempts(email);
+        
+        return OtpStatusResponse.builder()
+                .exists(true)
+                .remainingTimeSeconds(Math.max(0, remainingTimeSeconds))
+                .expired(expired)
+                .remainingAttempts(Math.max(0, remainingAttempts))
+                .build();
     }
 
     /**

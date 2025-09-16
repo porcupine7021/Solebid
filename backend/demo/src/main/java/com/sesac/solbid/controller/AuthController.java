@@ -26,8 +26,10 @@ import com.sesac.solbid.dto.auth.request.CallbackRequest;
 import com.sesac.solbid.dto.auth.response.LoginSuccessResponse;
 import com.sesac.solbid.dto.user.response.LoginResponse;
 import com.sesac.solbid.dto.auth.request.PasswordResetRequest;
+import com.sesac.solbid.dto.auth.request.PasswordResetOtpVerifyRequest;
 import com.sesac.solbid.dto.auth.request.PasswordResetVerifyRequest;
 import com.sesac.solbid.dto.auth.request.ResendOtpRequest;
+import com.sesac.solbid.dto.auth.response.OtpStatusResponse;
 
 /**
  * 인증 컨트롤러
@@ -229,6 +231,37 @@ public class AuthController {
     }
 
     /**
+     * 비밀번호 재설정 OTP 검증만 수행
+     * POST /api/auth/password/verify-otp
+     */
+    @PostMapping("/password/verify-otp")
+    public ResponseEntity<ApiResponse<Object>> verifyPasswordResetOtp(
+            @Valid @RequestBody PasswordResetOtpVerifyRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+        
+        try {
+            passwordResetService.verifyOtpOnly(request.getEmail(), request.getOtp());
+            
+            log.info("비밀번호 재설정 OTP 검증 성공: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "인증번호가 확인되었습니다."));
+            
+        } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 검증 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(request.getEmail()), clientIp, e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 검증 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(request.getEmail()), clientIp, e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
      * 비밀번호 재설정 OTP 검증 및 비밀번호 변경
      * POST /api/auth/password/verify-and-reset
      */
@@ -285,6 +318,38 @@ public class AuthController {
         } catch (Exception e) {
             log.error("비밀번호 재설정 OTP 재전송 중 예외 발생: email={}, clientIp={}", 
                     maskEmail(request.getEmail()), clientIp, e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 비밀번호 재설정 OTP 상태 조회
+     * GET /api/auth/password/otp-status
+     */
+    @GetMapping("/password/otp-status")
+    public ResponseEntity<ApiResponse<OtpStatusResponse>> getOtpStatus(
+            @RequestParam String email,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.debug("비밀번호 재설정 OTP 상태 조회: email={}, clientIp={}", maskEmail(email), clientIp);
+        
+        try {
+            OtpStatusResponse otpStatus = passwordResetService.getOtpStatus(email);
+            
+            log.debug("비밀번호 재설정 OTP 상태 조회 완료: email={}, clientIp={}, exists={}, remainingTime={}", 
+                    maskEmail(email), clientIp, otpStatus.isExists(), otpStatus.getRemainingTimeSeconds());
+            return ResponseEntity.ok(ApiResponse.success(otpStatus, "OTP 상태 조회가 완료되었습니다."));
+            
+        } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 상태 조회 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(email), clientIp, e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 상태 조회 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(email), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
