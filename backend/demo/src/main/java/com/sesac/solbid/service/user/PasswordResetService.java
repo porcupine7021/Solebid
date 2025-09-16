@@ -3,6 +3,7 @@ package com.sesac.solbid.service.user;
 import com.sesac.solbid.domain.User;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
+import com.sesac.solbid.exception.PasswordResetExceptionUtils;
 import com.sesac.solbid.repository.SocialLoginRepository;
 import com.sesac.solbid.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class PasswordResetService {
             // 소셜 로그인 사용자이면서 비밀번호가 없는 경우 비밀번호 재설정 불가
             if ((user.getPassword() == null || user.getPassword().isBlank()) && 
                 socialLoginRepository.findByUser(user).isPresent()) {
-                throw new CustomException(ErrorCode.PASSWORD_RESET_NOT_ALLOWED);
+                throw PasswordResetExceptionUtils.resetNotAllowed(email);
             }
             
             // OTP 생성 및 이메일 발송
@@ -68,18 +69,18 @@ public class PasswordResetService {
         
         // 사용자 존재 여부 확인
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> PasswordResetExceptionUtils.userNotFound(email));
         
         // OTP 검증 및 소비
         String tokenEmail = tokenService.consumeToken(otp);
         if (tokenEmail == null || !tokenEmail.equals(email)) {
             log.warn("유효하지 않은 비밀번호 재설정 OTP: email={}, otp={}", maskEmail(email), maskOtp(otp));
-            throw new CustomException(ErrorCode.PASSWORD_RESET_OTP_INVALID);
+            throw PasswordResetExceptionUtils.invalidOtp(email);
         }
         
         // 기존 비밀번호와 동일한지 확인
         if (user.getPassword() != null && passwordEncoder.matches(newPassword, user.getPassword())) {
-            throw new CustomException(ErrorCode.PASSWORD_RESET_SAME_AS_OLD);
+            throw PasswordResetExceptionUtils.sameAsOldPassword(email);
         }
         
         // 비밀번호 업데이트
@@ -98,12 +99,12 @@ public class PasswordResetService {
         
         // 사용자 존재 여부 확인
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> PasswordResetExceptionUtils.userNotFound(email));
         
         // 소셜 로그인 사용자이면서 비밀번호가 없는 경우 비밀번호 재설정 불가
         if ((user.getPassword() == null || user.getPassword().isBlank()) && 
             socialLoginRepository.findByUser(user).isPresent()) {
-            throw new CustomException(ErrorCode.PASSWORD_RESET_NOT_ALLOWED);
+            throw PasswordResetExceptionUtils.resetNotAllowed(email);
         }
         
         // 재전송 제한 확인
@@ -124,23 +125,30 @@ public class PasswordResetService {
      * @param email 확인할 이메일 주소
      */
     private void validateResendLimits(String email) {
-        // 일일 재전송 횟수 확인
-        int dailyCount = tokenService.getDailyResendCount(email);
-        if (dailyCount >= DAILY_RESEND_LIMIT) {
-            log.warn("일일 재전송 횟수 초과: {} ({}회)", maskEmail(email), dailyCount);
-            throw new CustomException(ErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED);
-        }
-        
-        // 마지막 재전송 시간 확인 (1분 간격 제한)
-        long lastResendTime = tokenService.getLastResendTime(email);
-        if (lastResendTime > 0) {
-            long currentTime = System.currentTimeMillis() / 1000;
-            long timeDiff = currentTime - lastResendTime;
-            if (timeDiff < RESEND_INTERVAL_MINUTES * 60) {
-                long remainingSeconds = (RESEND_INTERVAL_MINUTES * 60) - timeDiff;
-                log.warn("재전송 간격 제한: {} ({}초 후 재시도 가능)", maskEmail(email), remainingSeconds);
-                throw new CustomException(ErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED);
+        // EmailVerificationTokenService의 canRequestResend 메서드를 사용하여 재전송 가능 여부 확인
+        if (!tokenService.canRequestResend(email)) {
+            // 일일 재전송 횟수 확인
+            int dailyCount = tokenService.getDailyResendCount(email);
+            if (dailyCount >= DAILY_RESEND_LIMIT) {
+                log.warn("일일 재전송 횟수 초과: {} ({}회)", maskEmail(email), dailyCount);
+                throw PasswordResetExceptionUtils.resendLimitExceeded(email, dailyCount, DAILY_RESEND_LIMIT);
             }
+            
+            // 마지막 재전송 시간 확인 (1분 간격 제한)
+            long lastResendTime = tokenService.getLastResendTime(email);
+            if (lastResendTime > 0) {
+                long currentTime = System.currentTimeMillis() / 1000;
+                long timeDiff = currentTime - lastResendTime;
+                if (timeDiff < RESEND_INTERVAL_MINUTES * 60) {
+                    long remainingSeconds = (RESEND_INTERVAL_MINUTES * 60) - timeDiff;
+                    log.warn("재전송 간격 제한: {} ({}초 후 재시도 가능)", maskEmail(email), remainingSeconds);
+                    throw PasswordResetExceptionUtils.resendTooFrequent(email, remainingSeconds);
+                }
+            }
+            
+            // 기타 재전송 제한 (일반적인 경우)
+            log.warn("재전송 제한: {}", maskEmail(email));
+            throw PasswordResetExceptionUtils.resendLimitExceeded(email, dailyCount, DAILY_RESEND_LIMIT);
         }
     }
 
