@@ -10,6 +10,10 @@ public interface ProductService {
     Long create(Long sellerId, ProductCreateRequest req);
 
     void finalizeImages(Long id, Long userId);
+    List<ProductResponse> getProducts();
+
+    /** 경매가 하나라도 있으면 판매자 변경 불가 */
+    void changeSeller(Long productId, Long newSellerId);
 
     List<ProductResponse> getProducts(String sortBy, Integer limit);
 

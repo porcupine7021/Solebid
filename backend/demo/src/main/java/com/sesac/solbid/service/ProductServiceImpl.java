@@ -115,6 +115,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
+    public void changeSeller(Long productId, Long newSellerId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        User newSeller = userRepository.findById(newSellerId)
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED));
+
+        try {
+            product.changeSeller(newSeller); // 공개 도메인 메서드
+        } catch (IllegalStateException e) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, e.getMessage());
+        }
+        // 영속 상태라 별도 save() 불필요
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<ProductResponse> getProducts(String sortBy, Integer limit) {
         List<ProductResponse> productResponses = productRepository
