@@ -20,29 +20,56 @@ const FindPassword: React.FC = () => {
   const [otpTimer, setOtpTimer] = useState(0); // OTP 만료 타이머 (초)
   const [otpExpired, setOtpExpired] = useState(false);
 
-  // 재전송 쿨다운 타이머
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => {
-        setResendCooldown(resendCooldown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendCooldown]);
+  // 정확한 타이머 관리를 위한 시작 시간 저장
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+  const [resendStartTime, setResendStartTime] = useState<number | null>(null);
 
-  // OTP 만료 타이머
+  // 재전송 쿨다운 타이머 - 정확한 시간 기반
   useEffect(() => {
-    if (otpTimer > 0) {
-      const timer = setTimeout(() => {
-        setOtpTimer(otpTimer - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (otpTimer === 0 && step === 'otp' && !otpExpired) {
-      // 타이머가 0이 되면 만료 처리
-      setOtpExpired(true);
-      setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+    if (resendCooldown > 0 && resendStartTime) {
+      const targetTime = resendStartTime + (60 * 1000); // 60초
+      
+      const updateTimer = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((targetTime - now) / 1000));
+        
+        if (remaining !== resendCooldown) {
+          setResendCooldown(remaining);
+        }
+        
+        if (remaining > 0) {
+          requestAnimationFrame(updateTimer);
+        }
+      };
+      
+      requestAnimationFrame(updateTimer);
     }
-  }, [otpTimer, step, otpExpired]);
+  }, [resendCooldown > 0, resendStartTime]);
+
+  // OTP 만료 타이머 - 정확한 시간 기반
+  useEffect(() => {
+    if (otpTimer > 0 && timerStartTime) {
+      const targetTime = timerStartTime + (300 * 1000); // 5분
+      
+      const updateTimer = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((targetTime - now) / 1000));
+        
+        if (remaining !== otpTimer) {
+          setOtpTimer(remaining);
+        }
+        
+        if (remaining > 0) {
+          requestAnimationFrame(updateTimer);
+        } else if (remaining === 0 && step === 'otp' && !otpExpired) {
+          setOtpExpired(true);
+          setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+        }
+      };
+      
+      requestAnimationFrame(updateTimer);
+    }
+  }, [otpTimer > 0, timerStartTime, step, otpExpired]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,9 +82,12 @@ const FindPassword: React.FC = () => {
     try {
       const res: ApiResponse = await requestPasswordResetOtp(email.trim());
       if (res.success) {
+        const now = Date.now();
         setStep('otp');
         setResendCooldown(60); // 1분 쿨다운
+        setResendStartTime(now);
         setOtpTimer(300); // 5분 OTP 만료 시간 (300초)
+        setTimerStartTime(now);
         setOtpExpired(false);
       } else {
         setError(res.message || '요청 실패');
@@ -145,9 +175,12 @@ const FindPassword: React.FC = () => {
     try {
       const res: ApiResponse = await resendPasswordResetOtp(email);
       if (res.success) {
+        const now = Date.now();
         setResendCooldown(60); // 1분 쿨다운
+        setResendStartTime(now);
         setOtp(''); // OTP 입력 필드 초기화
         setOtpTimer(300); // 5분 OTP 만료 시간 재설정
+        setTimerStartTime(now);
         setOtpExpired(false); // 만료 상태 초기화
       } else {
         setError(res.message || '인증번호 재전송에 실패했습니다');

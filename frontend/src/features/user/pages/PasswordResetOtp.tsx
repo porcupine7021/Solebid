@@ -18,6 +18,10 @@ const PasswordResetOtp: React.FC = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [otpTimer, setOtpTimer] = useState(300); // OTP 만료 타이머 (초) - 5분으로 초기화
   const [isOtpExpired, setIsOtpExpired] = useState(false);
+  
+  // 정확한 타이머 관리를 위한 시작 시간 저장
+  const [timerStartTime, setTimerStartTime] = useState<number>(Date.now());
+  const [resendStartTime, setResendStartTime] = useState<number | null>(null);
 
   // 에러 메시지 안전 추출 헬퍼
   const extractErrorMessage = (err: unknown, fallback: string): string => {
@@ -37,29 +41,52 @@ const PasswordResetOtp: React.FC = () => {
     }
   }, [email, navigate]);
 
-  // 재전송 쿨다운 타이머
+  // 재전송 쿨다운 타이머 - 정확한 시간 기반
   useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => {
-        setResendCooldown(resendCooldown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
+    if (resendCooldown > 0 && resendStartTime) {
+      const targetTime = resendStartTime + (60 * 1000); // 60초
+      
+      const updateTimer = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((targetTime - now) / 1000));
+        
+        if (remaining !== resendCooldown) {
+          setResendCooldown(remaining);
+        }
+        
+        if (remaining > 0) {
+          requestAnimationFrame(updateTimer);
+        }
+      };
+      
+      requestAnimationFrame(updateTimer);
     }
-  }, [resendCooldown]);
+  }, [resendCooldown > 0, resendStartTime]);
 
-  // OTP 만료 타이머
+  // OTP 만료 타이머 - 정확한 시간 기반
   useEffect(() => {
-    if (otpTimer > 0) {
-      const timer = setTimeout(() => {
-        setOtpTimer(otpTimer - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (otpTimer === 0 && !isOtpExpired) {
-      // 타이머가 0이 되면 만료 처리
-      setIsOtpExpired(true);
-      setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+    if (otpTimer > 0 && timerStartTime) {
+      const targetTime = timerStartTime + (300 * 1000); // 5분
+      
+      const updateTimer = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((targetTime - now) / 1000));
+        
+        if (remaining !== otpTimer) {
+          setOtpTimer(remaining);
+        }
+        
+        if (remaining > 0) {
+          requestAnimationFrame(updateTimer);
+        } else if (remaining === 0 && !isOtpExpired) {
+          setIsOtpExpired(true);
+          setError('인증번호가 만료되었습니다. 새로운 인증번호를 요청하세요.');
+        }
+      };
+      
+      requestAnimationFrame(updateTimer);
     }
-  }, [otpTimer, isOtpExpired]);
+  }, [otpTimer > 0, timerStartTime, isOtpExpired]);
 
   const validatePassword = (password: string): string | null => {
     if (!password || password.length < 8) {
@@ -131,9 +158,12 @@ const PasswordResetOtp: React.FC = () => {
     try {
       const res: ApiResponse = await resendPasswordResetOtp(email);
       if (res.success) {
+        const now = Date.now();
         setResendCooldown(60); // 1분 쿨다운
+        setResendStartTime(now);
         setOtp(''); // OTP 입력 필드 초기화
         setOtpTimer(300); // 5분 OTP 만료 시간 재설정
+        setTimerStartTime(now);
         setIsOtpExpired(false); // 만료 상태 리셋
       } else {
         setError(res.message || '인증번호 재전송에 실패했습니다.');

@@ -2,8 +2,6 @@ package com.sesac.solbid.service.user;
 
 import com.sesac.solbid.domain.User;
 
-import com.sesac.solbid.exception.CustomException;
-import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.exception.PasswordResetExceptionUtils;
 import com.sesac.solbid.repository.SocialLoginRepository;
 import com.sesac.solbid.repository.UserRepository;
@@ -72,10 +70,22 @@ public class PasswordResetService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> PasswordResetExceptionUtils.userNotFound(email));
         
+        // 토큰 유효성 확인을 위한 추가 로그
+        boolean hasValidToken = tokenService.hasValidToken(email);
+        long remainingTime = tokenService.getRemainingTimeSeconds(email);
+        log.debug("토큰 상태 확인: email={}, hasValidToken={}, remainingTimeSeconds={}", 
+                maskEmail(email), hasValidToken, remainingTime);
+        
         // OTP 검증 및 토큰에서 이메일 확인
         String tokenEmail = tokenService.getEmailIfValid(otp);
-        if (tokenEmail == null || !tokenEmail.equals(email)) {
-            log.warn("유효하지 않은 비밀번호 재설정 OTP 또는 이메일 불일치: email={}, tokenEmail={}, otp={}", 
+        if (tokenEmail == null) {
+            log.warn("유효하지 않은 비밀번호 재설정 OTP: email={}, otp={}, tokenEmail=null, hasValidToken={}, remainingTime={}", 
+                    maskEmail(email), maskOtp(otp), hasValidToken, remainingTime);
+            throw PasswordResetExceptionUtils.invalidOtp(email);
+        }
+        
+        if (!tokenEmail.equals(email)) {
+            log.warn("비밀번호 재설정 OTP 이메일 불일치: email={}, tokenEmail={}, otp={}", 
                     maskEmail(email), maskEmail(tokenEmail), maskOtp(otp));
             throw PasswordResetExceptionUtils.invalidOtp(email);
         }

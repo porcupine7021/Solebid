@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -54,6 +53,7 @@ public class InMemoryEmailVerificationTokenService implements EmailVerificationT
     @Override
     public String getEmailIfValid(String token) {
         if (token == null || token.trim().isEmpty()) {
+            log.warn("[InMemory] 토큰 검증 실패: null 또는 빈 토큰");
             return null;
         }
         
@@ -61,17 +61,27 @@ public class InMemoryEmailVerificationTokenService implements EmailVerificationT
         
         TokenEntry entry = tokenStore.get(token);
         if (entry == null) {
-            log.debug("[InMemory] 토큰 검증 실패: 존재하지 않음 - {}", maskToken(token));
+            log.warn("[InMemory] 토큰 검증 실패: 존재하지 않음 - {}, 현재 저장된 토큰 수: {}", 
+                    maskToken(token), tokenStore.size());
+            // 디버깅을 위해 현재 저장된 토큰들의 마스킹된 정보 출력
+            tokenStore.keySet().forEach(key -> 
+                log.debug("[InMemory] 저장된 토큰: {}", maskToken(key)));
             return null;
         }
         
-        if (entry.expiry.isBefore(Instant.now())) {
-            log.debug("[InMemory] 토큰 검증 실패: 만료됨 - {}", maskToken(token));
+        Instant now = Instant.now();
+        if (entry.expiry.isBefore(now)) {
+            long expiredSeconds = ChronoUnit.SECONDS.between(entry.expiry, now);
+            log.warn("[InMemory] 토큰 검증 실패: 만료됨 - {}, {}초 전 만료", 
+                    maskToken(token), expiredSeconds);
             tokenStore.remove(token);
+            emailToTokenStore.entrySet().removeIf(e -> e.getValue().equals(token));
             return null;
         }
         
-        log.debug("[InMemory] 토큰 검증 성공: {} for {}", maskToken(token), maskEmail(entry.email));
+        long remainingSeconds = ChronoUnit.SECONDS.between(now, entry.expiry);
+        log.info("[InMemory] 토큰 검증 성공: {} for {}, 남은 시간: {}초", 
+                maskToken(token), maskEmail(entry.email), remainingSeconds);
         return entry.email;
     }
 
