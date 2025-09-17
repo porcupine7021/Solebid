@@ -29,7 +29,13 @@ public class PointController {
                 .body(body);
     }*/
 
-    /*사용자용 유저 아이디 기반 포인트 단건 조회*/
+    /**
+     * 로그인한 사용자 본인의 포인트 단건 조회
+     * GET /me/points
+     *
+     * @param authUser 현재 인증된 사용자 객체
+     * @return 사용자의 포인트 요약 응답
+     **/
     @GetMapping("/me/points")
     public ResponseEntity<PointSummaryResponse> getMyPoint(
             @AuthenticationPrincipal User authUser) {
