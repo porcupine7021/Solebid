@@ -19,8 +19,9 @@ public class SignupRequest {
     private String email;
 
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{8,20}$",
-            message = "비밀번호는 8~20자 영문 대소문자, 숫자, 특수문자를 사용하세요.")
+    @Pattern(
+            regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*()_+\\-={}\\[\\]:;\"'`<>,.?/|~])(?=\\S+$).{8,20}$",
+            message = "비밀번호는 8~20자 영문 대소문자, 숫자, 특수문자를 모두 포함하세요.")
     private String password;
 
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
@@ -44,4 +45,3 @@ public class SignupRequest {
                 .build();
     }
 }
-
