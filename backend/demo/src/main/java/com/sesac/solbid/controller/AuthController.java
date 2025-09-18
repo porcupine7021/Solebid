@@ -95,7 +95,7 @@ public class AuthController {
             AuthUrlResponse response = oAuth2Service.generateAuthUrl(provider);
 
             log.info("OAuth2 인증 URL 생성 성공: provider={}, clientIp={}, state={}", 
-                    provider, clientIp, maskState(response.getState()));
+                    provider, clientIp, maskState(response.state()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(response, "OAuth2 인증 URL이 생성되었습니다.")
