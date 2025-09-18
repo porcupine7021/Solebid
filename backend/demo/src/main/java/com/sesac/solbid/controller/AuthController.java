@@ -145,25 +145,25 @@ public class AuthController {
             // HttpOnly 쿠키로 토큰 설정
             cookieUtil.addTokenCookies(
                 httpResponse,
-                response.getAccessToken(), jwtUtil.getAccessTokenValiditySeconds(),
-                response.getRefreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
+                response.accessToken(), jwtUtil.getAccessTokenValiditySeconds(),
+                response.refreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
             );
 
             // 임시 닉네임인지 여부 판단 (user_ 접두어)
-            boolean requiresNickname = response.getNickname() != null && response.getNickname().startsWith("user_");
+            boolean requiresNickname = response.nickname() != null && response.nickname().startsWith("user_");
 
             // 응답에서는 토큰 제외하고 사용자 정보만 반환
             LoginSuccessResponse loginSuccessResponse = new LoginSuccessResponse(
-                    response.getUserId(),
-                    response.getEmail(),
-                    response.getNickname(),
-                    response.getUserType(),
+                    response.userId(),
+                    response.email(),
+                    response.nickname(),
+                    response.userType(),
                     provider,
                     requiresNickname
             );
             
             log.info("OAuth2 콜백 처리 성공: provider={}, clientIp={}, userId={}, email={}", 
-                    provider, clientIp, response.getUserId(), maskEmail(response.getEmail()));
+                    provider, clientIp, response.userId(), maskEmail(response.email()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(loginSuccessResponse, "소셜로그인이 완료되었습니다.")
