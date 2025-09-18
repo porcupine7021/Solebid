@@ -6,6 +6,7 @@ import com.sesac.solbid.domain.ProductImage;
 import com.sesac.solbid.dto.auction.response.AuctionDetailResponse;
 import com.sesac.solbid.repository.AuctionEventRepository;
 import com.sesac.solbid.repository.ProductImageRepository;
+import com.sesac.solbid.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +17,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuctionQueryServiceImpl implements AuctionQueryService{
+public class AuctionQueryServiceImpl implements AuctionQueryService {
 
     private final AuctionEventRepository auctionEventRepository;
     private final ProductImageRepository productImageRepository;
+    private final S3Service s3Service; // Presigned URL
 
-    /**상품 상세 조회*/
     @Override
     public AuctionDetailResponse getAuctionDetail(Long auctionId) {
         AuctionEvent a = auctionEventRepository.findDetail(auctionId)
@@ -57,7 +58,7 @@ public class AuctionQueryServiceImpl implements AuctionQueryService{
                         p.getReleaseDate(),
                         images.stream()
                                 .map(img -> new AuctionDetailResponse.ProductImage(
-                                        img.getFilePath(),
+                                        s3Service.presignGetUrl(img.getFilePath()), //Presigned URL 변환
                                         img.isThumbnail(),
                                         img.getSortOrder()
                                 ))
