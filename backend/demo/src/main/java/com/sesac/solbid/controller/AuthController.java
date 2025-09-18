@@ -135,11 +135,11 @@ public class AuthController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("OAuth2 콜백 처리 요청: provider={}, clientIp={}, userAgent={}, state={}", 
-                provider, clientIp, maskUserAgent(userAgent), maskState(request.getState()));
+                provider, clientIp, maskUserAgent(userAgent), maskState(request.state()));
         
         try {
             LoginResponse response = oAuth2Service.processCallback(
-                provider, request.getCode(), request.getState()
+                provider, request.code(), request.state()
             );
             
             // HttpOnly 쿠키로 토큰 설정
@@ -170,7 +170,7 @@ public class AuthController {
             );
         } catch (OAuth2Exception e) {
             log.warn("OAuth2 콜백 처리 실패: provider={}, clientIp={}, error={}, state={}", 
-                    provider, clientIp, e.getMessage(), maskState(request.getState()));
+                    provider, clientIp, e.getMessage(), maskState(request.state()));
             int status = (e.getErrorCode() == ErrorCode.SOCIAL_ACCOUNT_CONFLICT) ? 409 : 400;
             return ResponseEntity.status(status).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
@@ -186,13 +186,13 @@ public class AuthController {
             );
         } catch (CustomException e) {
             log.warn("OAuth2 콜백 처리 실패(Custom): provider={}, clientIp={}, error={}, state={}",
-                    provider, clientIp, e.getMessage(), maskState(request.getState()));
+                    provider, clientIp, e.getMessage(), maskState(request.state()));
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                     ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("OAuth2 콜백 처리 중 예외 발생: provider={}, clientIp={}, state={}", 
-                    provider, clientIp, maskState(request.getState()), e);
+                    provider, clientIp, maskState(request.state()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );

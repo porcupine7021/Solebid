@@ -131,10 +131,10 @@ class AuthControllerTest {
     void handleCallback_Success_Google() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("test-auth-code-12345")
-                .state("test-state-12345")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "test-auth-code-12345",
+                "test-state-12345"
+        );
 
         // TTL 스텁
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
@@ -149,7 +149,7 @@ class AuthControllerTest {
                 .refreshToken("jwt-refresh-token")
                 .build();
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
 
         // When & Then
@@ -184,7 +184,7 @@ class AuthControllerTest {
         assertThat(responseContent).doesNotContain("refreshToken");
 
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -192,10 +192,10 @@ class AuthControllerTest {
     void handleCallback_Success_Kakao() throws Exception {
         // Given
         String provider = "kakao";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("kakao-auth-code-67890")
-                .state("kakao-state-67890")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "kakao-auth-code-67890",
+                "kakao-state-67890"
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
@@ -209,7 +209,7 @@ class AuthControllerTest {
                 .refreshToken("kakao-jwt-refresh")
                 .build();
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
 
         // When & Then
@@ -226,7 +226,7 @@ class AuthControllerTest {
                 .andExpect(cookie().exists("accessToken"))
                 .andExpect(cookie().exists("refreshToken"));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -297,12 +297,12 @@ class AuthControllerTest {
     void handleCallback_Fail_StateMismatch() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("test-auth-code")
-                .state("invalid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "test-auth-code",
+                "invalid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_STATE_MISMATCH));
 
         // When & Then
@@ -316,7 +316,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_STATE_MISMATCH"))
                 .andExpect(jsonPath("$.message").value("OAuth2 state 파라미터가 일치하지 않습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -324,12 +324,12 @@ class AuthControllerTest {
     void handleCallback_Fail_TokenError() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("invalid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "invalid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_TOKEN_ERROR));
 
         // When & Then
@@ -343,7 +343,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_TOKEN_ERROR"))
                 .andExpect(jsonPath("$.message").value("OAuth2 액세스 토큰 획득에 실패했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -351,12 +351,12 @@ class AuthControllerTest {
     void handleCallback_Fail_UserInfoError() throws Exception {
         // Given
         String provider = "kakao";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_USER_INFO_ERROR));
 
         // When & Then
@@ -370,7 +370,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_USER_INFO_ERROR"))
                 .andExpect(jsonPath("$.message").value("OAuth2 사용자 정보 획득에 실패했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -378,12 +378,12 @@ class AuthControllerTest {
     void handleCallback_Fail_SocialAccountConflict() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.SOCIAL_ACCOUNT_CONFLICT));
 
         // When & Then
@@ -397,7 +397,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("SOCIAL_ACCOUNT_CONFLICT"))
                 .andExpect(jsonPath("$.message").value("이미 다른 소셜 계정으로 연결된 이메일입니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -405,12 +405,12 @@ class AuthControllerTest {
     void handleCallback_Fail_InternalServerError() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new RuntimeException("Database connection failed"));
 
         // When & Then
@@ -424,7 +424,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     // === 요청 검증 테스트 ===
@@ -434,10 +434,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingCode() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("") // 빈 문자열
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "", // 빈 문자열
+                "valid-state"
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -458,10 +458,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingState() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("") // 빈 문자열
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "" // 빈 문자열
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -501,10 +501,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingContentType() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -577,10 +577,10 @@ class AuthControllerTest {
         // Given
         String provider = "google";
         String longAuthCode = "a".repeat(1000); // 1000자 인증 코드
-        CallbackRequest request = CallbackRequest.builder()
-                .code(longAuthCode)
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                longAuthCode,
+                "valid-state"
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
@@ -614,10 +614,10 @@ class AuthControllerTest {
         // Given
         String provider = "kakao";
         String specialState = "state-with-special-chars-!@#$%^&*()_+-=[]{}|;:,.<>?";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-code")
-                .state(specialState)
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-code",
+                specialState
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);

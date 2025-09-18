@@ -204,10 +204,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("mock-authorization-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "mock-authorization-code",
+                state
+        );
 
         MvcResult callbackResult = mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -311,10 +311,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("mock-existing-user-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "mock-existing-user-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -387,10 +387,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("mock-kakao-authorization-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "mock-kakao-authorization-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/kakao/callback")
                         .with(csrf())
@@ -456,10 +456,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 (실패) ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("invalid-authorization-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "invalid-authorization-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -520,10 +520,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 (실패) ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("valid-code-but-invalid-token")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "valid-code-but-invalid-token",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/kakao/callback")
                         .with(csrf())
@@ -565,10 +565,10 @@ class OAuth2EndToEndIntegrationTest {
         String validState = authUrlResponse.getState();
 
         // === 2단계: 잘못된 state로 콜백 요청 ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("valid-authorization-code")
-                .state("invalid-state-parameter") // 잘못된 state
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "valid-authorization-code",
+                "invalid-state-parameter" // 잘못된 state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -644,10 +644,10 @@ class OAuth2EndToEndIntegrationTest {
                 """));
 
         // === 3단계: OAuth2 콜백 처리 (충돌 발생) ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("google-auth-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "google-auth-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -703,10 +703,10 @@ class OAuth2EndToEndIntegrationTest {
             .setBodyDelay(15, TimeUnit.SECONDS)); // 15초 지연 (타임아웃 유발)
 
         // === 3단계: OAuth2 콜백 처리 (타임아웃 발생) ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("timeout-test-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "timeout-test-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -761,10 +761,10 @@ class OAuth2EndToEndIntegrationTest {
                 """)); // 이메일 필드 누락
 
         // === 3단계: OAuth2 콜백 처리 (실패) ===
-        CallbackRequest callbackRequest = CallbackRequest.builder()
-                .code("valid-code")
-                .state(state)
-                .build();
+        CallbackRequest callbackRequest = new CallbackRequest(
+                "valid-code",
+                state
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -833,10 +833,10 @@ class OAuth2EndToEndIntegrationTest {
                 }
                 """));
 
-        CallbackRequest callbackRequest1 = CallbackRequest.builder()
-                .code("first-code")
-                .state(state1)
-                .build();
+        CallbackRequest callbackRequest1 = new CallbackRequest(
+                "first-code",
+                state1
+        );
 
         mockMvc.perform(post("/api/auth/oauth2/google/callback")
                         .with(csrf())
@@ -847,10 +847,10 @@ class OAuth2EndToEndIntegrationTest {
                 .andExpect(jsonPath("$.data.email").value("first@example.com"));
 
         // === 3단계: 두 번째 요청은 다른 state로 실패해야 함 ===
-        CallbackRequest callbackRequest2 = CallbackRequest.builder()
-                .code("second-code")
-                .state(state2) // 여전히 유효한 state
-                .build();
+        CallbackRequest callbackRequest2 = new CallbackRequest(
+                "second-code",
+                state2 // 여전히 유효한 state
+        );
 
         // 두 번째 사용자를 위한 Mock 응답 설정
         mockGoogleServer.enqueue(new MockResponse()
