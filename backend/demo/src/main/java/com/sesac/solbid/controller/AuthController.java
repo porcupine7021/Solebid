@@ -153,14 +153,14 @@ public class AuthController {
             boolean requiresNickname = response.getNickname() != null && response.getNickname().startsWith("user_");
 
             // 응답에서는 토큰 제외하고 사용자 정보만 반환
-            LoginSuccessResponse loginSuccessResponse = LoginSuccessResponse.builder()
-                    .userId(response.getUserId())
-                    .email(response.getEmail())
-                    .nickname(response.getNickname())
-                    .userType(response.getUserType())
-                    .provider(provider)
-                    .requiresNickname(requiresNickname)
-                    .build();
+            LoginSuccessResponse loginSuccessResponse = new LoginSuccessResponse(
+                    response.getUserId(),
+                    response.getEmail(),
+                    response.getNickname(),
+                    response.getUserType(),
+                    provider,
+                    requiresNickname
+            );
             
             log.info("OAuth2 콜백 처리 성공: provider={}, clientIp={}, userId={}, email={}", 
                     provider, clientIp, response.getUserId(), maskEmail(response.getEmail()));
