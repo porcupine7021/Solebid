@@ -1,4 +1,4 @@
-package com.sesac.solbid.repository;
+package com.sesac.solbid.repository.wish;
 
 import com.sesac.solbid.domain.Product;
 import com.sesac.solbid.domain.User;
