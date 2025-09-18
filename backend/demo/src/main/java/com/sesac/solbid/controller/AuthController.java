@@ -209,22 +209,22 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
-        log.info("비밀번호 재설정 OTP 요청: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+        log.info("비밀번호 재설정 OTP 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
         
         try {
-            passwordResetService.requestResetWithOtp(request.getEmail());
+            passwordResetService.requestResetWithOtp(request.email());
             
-            log.info("비밀번호 재설정 OTP 발송 완료: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+            log.info("비밀번호 재설정 OTP 발송 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
             return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호 재설정 인증번호를 이메일로 발송했습니다."));
             
         } catch (CustomException e) {
             log.warn("비밀번호 재설정 OTP 요청 실패: email={}, clientIp={}, error={}", 
-                    maskEmail(request.getEmail()), clientIp, e.getMessage());
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
             log.error("비밀번호 재설정 OTP 요청 중 예외 발생: email={}, clientIp={}", 
-                    maskEmail(request.getEmail()), clientIp, e);
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
@@ -240,22 +240,22 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
-        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
         
         try {
-            passwordResetService.verifyOtpOnly(request.getEmail(), request.getOtp());
+            passwordResetService.verifyOtpOnly(request.email(), request.otp());
             
-            log.info("비밀번호 재설정 OTP 검증 성공: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+            log.info("비밀번호 재설정 OTP 검증 성공: email={}, clientIp={}", maskEmail(request.email()), clientIp);
             return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "인증번호가 확인되었습니다."));
             
         } catch (CustomException e) {
             log.warn("비밀번호 재설정 OTP 검증 실패: email={}, clientIp={}, error={}", 
-                    maskEmail(request.getEmail()), clientIp, e.getMessage());
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
             log.error("비밀번호 재설정 OTP 검증 중 예외 발생: email={}, clientIp={}", 
-                    maskEmail(request.getEmail()), clientIp, e);
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
@@ -271,22 +271,22 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
-        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
         
         try {
-            passwordResetService.verifyOtpAndReset(request.getEmail(), request.getOtp(), request.getNewPassword());
+            passwordResetService.verifyOtpAndReset(request.email(), request.otp(), request.newPassword());
             
-            log.info("비밀번호 재설정 완료: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+            log.info("비밀번호 재설정 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
             return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호가 성공적으로 재설정되었습니다."));
             
         } catch (CustomException e) {
             log.warn("비밀번호 재설정 OTP 검증 실패: email={}, clientIp={}, error={}", 
-                    maskEmail(request.getEmail()), clientIp, e.getMessage());
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
             log.error("비밀번호 재설정 OTP 검증 중 예외 발생: email={}, clientIp={}", 
-                    maskEmail(request.getEmail()), clientIp, e);
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
@@ -302,22 +302,22 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
-        log.info("비밀번호 재설정 OTP 재전송 요청: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+        log.info("비밀번호 재설정 OTP 재전송 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
         
         try {
-            passwordResetService.resendResetOtp(request.getEmail());
+            passwordResetService.resendResetOtp(request.email());
             
-            log.info("비밀번호 재설정 OTP 재전송 완료: email={}, clientIp={}", maskEmail(request.getEmail()), clientIp);
+            log.info("비밀번호 재설정 OTP 재전송 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
             return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "인증번호를 다시 발송했습니다."));
             
         } catch (CustomException e) {
             log.warn("비밀번호 재설정 OTP 재전송 실패: email={}, clientIp={}, error={}", 
-                    maskEmail(request.getEmail()), clientIp, e.getMessage());
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
             log.error("비밀번호 재설정 OTP 재전송 중 예외 발생: email={}, clientIp={}", 
-                    maskEmail(request.getEmail()), clientIp, e);
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
