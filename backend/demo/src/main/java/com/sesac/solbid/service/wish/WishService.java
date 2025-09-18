@@ -1,8 +1,8 @@
-package com.sesac.solbid.service;
-
-import com.sesac.solbid.dto.product.response.ProductResponse;
+package com.sesac.solbid.service.wish;
 
 import java.util.List;
+
+import com.sesac.solbid.dto.product.response.ProductResponse;
 
 public interface WishService {
 
