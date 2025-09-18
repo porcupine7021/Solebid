@@ -174,16 +174,14 @@ class RecordDtoServiceCompatibilityTest {
     }
 
     @Test
-    @DisplayName("NicknameAvailabilityResponse의 빌더 패턴이 정상 동작한다")
-    void nicknameAvailabilityResponse_builder_worksCorrectly() {
+    @DisplayName("NicknameAvailabilityResponse Record 생성이 정상 동작한다")
+    void nicknameAvailabilityResponse_record_worksCorrectly() {
         // when
-        NicknameAvailabilityResponse response = NicknameAvailabilityResponse.builder()
-                .available(true)
-                .build();
+        NicknameAvailabilityResponse response = new NicknameAvailabilityResponse(true);
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.isAvailable()).isTrue();
+        assertThat(response.available()).isTrue();
     }
 
     @Test

@@ -117,9 +117,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<NicknameAvailabilityResponse>> isNicknameAvailable(
             @RequestParam("nickname") String nickname) {
         boolean available = userService.isNicknameAvailable(nickname);
-        return ResponseEntity.ok(ApiResponse.success(NicknameAvailabilityResponse.builder()
-                .available(available)
-                .build()));
+        return ResponseEntity.ok(ApiResponse.success(new NicknameAvailabilityResponse(available)));
     }
 
     // 현재 사용자 닉네임 설정 (accessToken 쿠키 필요)
