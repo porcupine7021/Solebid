@@ -126,8 +126,7 @@ class EmailVerificationControllerTest {
     void resendVerification_Success() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendVerificationRequest request = new ResendVerificationRequest();
-        // request.setEmail(email); // Lombok @Getter만 있으므로 reflection 사용 필요
+        ResendVerificationRequest request = new ResendVerificationRequest(email);
         
         doNothing().when(emailVerificationService).resendVerificationEmail(email);
 

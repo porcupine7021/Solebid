@@ -667,8 +667,7 @@ class AuthControllerTest {
     void requestPasswordReset_Success() throws Exception {
         // Given
         String email = "test@example.com";
-        PasswordResetRequest request = new PasswordResetRequest();
-        // request.setEmail(email); // Lombok @Getter만 있으므로 JSON으로 직접 전송
+        PasswordResetRequest request = new PasswordResetRequest(email);
 
         doNothing().when(passwordResetService).requestResetWithOtp(email);
 
@@ -769,10 +768,11 @@ class AuthControllerTest {
         String otp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                newPassword
+        );
 
         doNothing().when(passwordResetService).verifyOtpAndReset(email, otp, newPassword);
 
@@ -799,10 +799,11 @@ class AuthControllerTest {
         String invalidOtp = "999999";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(invalidOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                invalidOtp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_OTP_INVALID, email))
                 .when(passwordResetService).verifyOtpAndReset(email, invalidOtp, newPassword);
@@ -827,10 +828,11 @@ class AuthControllerTest {
         String expiredOtp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(expiredOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                expiredOtp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_OTP_EXPIRED, email))
                 .when(passwordResetService).verifyOtpAndReset(email, expiredOtp, newPassword);
@@ -855,10 +857,11 @@ class AuthControllerTest {
         String otp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.USER_NOT_FOUND, email))
                 .when(passwordResetService).verifyOtpAndReset(email, otp, newPassword);
@@ -883,10 +886,11 @@ class AuthControllerTest {
         String otp = "123456";
         String samePassword = "oldPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(samePassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                samePassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_SAME_AS_OLD, email))
                 .when(passwordResetService).verifyOtpAndReset(email, otp, samePassword);
@@ -911,10 +915,11 @@ class AuthControllerTest {
         String invalidOtp = "12345"; // 5자리
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(invalidOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                invalidOtp,
+                newPassword
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/verify-and-reset")
@@ -936,10 +941,11 @@ class AuthControllerTest {
         String otp = "123456";
         String shortPassword = "123"; // 3자리
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(shortPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                shortPassword
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/verify-and-reset")
@@ -958,8 +964,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_Success() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doNothing().when(passwordResetService).resendResetOtp(email);
 
@@ -983,8 +988,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_UserNotFound() throws Exception {
         // Given
         String email = "nonexistent@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.USER_NOT_FOUND, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1006,8 +1010,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_LimitExceeded() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1029,8 +1032,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_TooFrequent() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_RESEND_TOO_FREQUENT, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1052,8 +1054,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_SocialUser() throws Exception {
         // Given
         String email = "social@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_NOT_ALLOWED, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1075,8 +1076,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_InvalidEmailFormat() throws Exception {
         // Given
         String invalidEmail = "invalid-email";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(invalidEmail);
+        ResendOtpRequest request = new ResendOtpRequest(invalidEmail);
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/resend-otp")
@@ -1094,8 +1094,7 @@ class AuthControllerTest {
     @DisplayName("비밀번호 재설정 OTP 재전송 - 빈 이메일")
     void resendPasswordResetOtp_EmptyEmail() throws Exception {
         // Given
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail("");
+        ResendOtpRequest request = new ResendOtpRequest("");
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/resend-otp")

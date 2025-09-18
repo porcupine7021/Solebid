@@ -26,10 +26,11 @@ class PasswordResetDtoTest {
     @DisplayName("PasswordResetVerifyRequest - 유효한 입력값은 검증을 통과해야 한다")
     void passwordResetVerifyRequest_validInput_shouldPassValidation() {
         // Given
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail("test@example.com");
-        request.setOtp("123456");
-        request.setNewPassword("newPassword123");
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                "test@example.com",
+                "123456",
+                "newPassword123"
+        );
 
         // When
         Set<ConstraintViolation<PasswordResetVerifyRequest>> violations = validator.validate(request);
@@ -42,10 +43,11 @@ class PasswordResetDtoTest {
     @DisplayName("PasswordResetVerifyRequest - 잘못된 이메일 형식은 검증에 실패해야 한다")
     void passwordResetVerifyRequest_invalidEmail_shouldFailValidation() {
         // Given
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail("invalid-email");
-        request.setOtp("123456");
-        request.setNewPassword("newPassword123");
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                "invalid-email",
+                "123456",
+                "newPassword123"
+        );
 
         // When
         Set<ConstraintViolation<PasswordResetVerifyRequest>> violations = validator.validate(request);
@@ -59,10 +61,11 @@ class PasswordResetDtoTest {
     @DisplayName("PasswordResetVerifyRequest - 잘못된 OTP 형식은 검증에 실패해야 한다")
     void passwordResetVerifyRequest_invalidOtp_shouldFailValidation() {
         // Given
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail("test@example.com");
-        request.setOtp("12345"); // 5자리만
-        request.setNewPassword("newPassword123");
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                "test@example.com",
+                "12345", // 5자리만
+                "newPassword123"
+        );
 
         // When
         Set<ConstraintViolation<PasswordResetVerifyRequest>> violations = validator.validate(request);
@@ -76,10 +79,11 @@ class PasswordResetDtoTest {
     @DisplayName("PasswordResetVerifyRequest - 짧은 비밀번호는 검증에 실패해야 한다")
     void passwordResetVerifyRequest_shortPassword_shouldFailValidation() {
         // Given
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail("test@example.com");
-        request.setOtp("123456");
-        request.setNewPassword("short"); // 8자 미만
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                "test@example.com",
+                "123456",
+                "short" // 8자 미만
+        );
 
         // When
         Set<ConstraintViolation<PasswordResetVerifyRequest>> violations = validator.validate(request);
@@ -93,8 +97,7 @@ class PasswordResetDtoTest {
     @DisplayName("ResendOtpRequest - 유효한 입력값은 검증을 통과해야 한다")
     void resendOtpRequest_validInput_shouldPassValidation() {
         // Given
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail("test@example.com");
+        ResendOtpRequest request = new ResendOtpRequest("test@example.com");
 
         // When
         Set<ConstraintViolation<ResendOtpRequest>> violations = validator.validate(request);
@@ -107,8 +110,7 @@ class PasswordResetDtoTest {
     @DisplayName("ResendOtpRequest - 잘못된 이메일 형식은 검증에 실패해야 한다")
     void resendOtpRequest_invalidEmail_shouldFailValidation() {
         // Given
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail("invalid-email");
+        ResendOtpRequest request = new ResendOtpRequest("invalid-email");
 
         // When
         Set<ConstraintViolation<ResendOtpRequest>> violations = validator.validate(request);
