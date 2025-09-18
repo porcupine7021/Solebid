@@ -49,12 +49,13 @@ class UserServiceSignupTest {
     
     @BeforeEach
     void setUp() {
-        signupRequest = new SignupRequest();
-        signupRequest.setEmail("test@example.com");
-        signupRequest.setPassword("password123");
-        signupRequest.setNickname("testuser");
-        signupRequest.setName("Test User");
-        signupRequest.setPhone("01012345678");
+        signupRequest = new SignupRequest(
+                "test@example.com",
+                "password123",
+                "testuser",
+                "Test User",
+                "01012345678"
+        );
         
         user = User.builder()
                 .email("test@example.com")

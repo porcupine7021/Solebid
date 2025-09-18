@@ -80,11 +80,11 @@ class AuthControllerTest {
     void generateAuthUrl_Success_Google() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize?client_id=test&state=test-state")
-                .state("test-state-12345")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize?client_id=test&state=test-state",
+                "test-state-12345",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -96,7 +96,7 @@ class AuthControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("OAuth2 인증 URL이 생성되었습니다."))
-                .andExpect(jsonPath("$.data.authUrl").value(mockResponse.getAuthUrl()));
+                .andExpect(jsonPath("$.data.authUrl").value(mockResponse.authUrl()));
 
         verify(oAuth2Service).generateAuthUrl(provider);
     }
@@ -106,11 +106,11 @@ class AuthControllerTest {
     void generateAuthUrl_Success_Kakao() throws Exception {
         // Given
         String provider = "kakao";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://kauth.kakao.com/oauth/authorize?client_id=test&state=kakao-state")
-                .state("kakao-state-67890")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://kauth.kakao.com/oauth/authorize?client_id=test&state=kakao-state",
+                "kakao-state-67890",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -131,25 +131,25 @@ class AuthControllerTest {
     void handleCallback_Success_Google() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("test-auth-code-12345")
-                .state("test-state-12345")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "test-auth-code-12345",
+                "test-state-12345"
+        );
 
         // TTL 스텁
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockLoginResponse = LoginResponse.builder()
-                .userId(1L)
-                .email("test@gmail.com")
-                .nickname("테스트사용자")
-                .userType(UserType.USER)
-                .accessToken("jwt-access-token")
-                .refreshToken("jwt-refresh-token")
-                .build();
+        LoginResponse mockLoginResponse = new LoginResponse(
+                1L,
+                "test@gmail.com",
+                "테스트사용자",
+                UserType.USER,
+                "jwt-access-token",
+                "jwt-refresh-token"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
 
         // When & Then
@@ -184,7 +184,7 @@ class AuthControllerTest {
         assertThat(responseContent).doesNotContain("refreshToken");
 
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -192,24 +192,24 @@ class AuthControllerTest {
     void handleCallback_Success_Kakao() throws Exception {
         // Given
         String provider = "kakao";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("kakao-auth-code-67890")
-                .state("kakao-state-67890")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "kakao-auth-code-67890",
+                "kakao-state-67890"
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockLoginResponse = LoginResponse.builder()
-                .userId(2L)
-                .email("user@kakao.com")
-                .nickname("카카오사용자")
-                .userType(UserType.USER)
-                .accessToken("kakao-jwt-access")
-                .refreshToken("kakao-jwt-refresh")
-                .build();
+        LoginResponse mockLoginResponse = new LoginResponse(
+                2L,
+                "user@kakao.com",
+                "카카오사용자",
+                UserType.USER,
+                "kakao-jwt-access",
+                "kakao-jwt-refresh"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
 
         // When & Then
@@ -226,7 +226,7 @@ class AuthControllerTest {
                 .andExpect(cookie().exists("accessToken"))
                 .andExpect(cookie().exists("refreshToken"));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -297,12 +297,12 @@ class AuthControllerTest {
     void handleCallback_Fail_StateMismatch() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("test-auth-code")
-                .state("invalid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "test-auth-code",
+                "invalid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_STATE_MISMATCH));
 
         // When & Then
@@ -316,7 +316,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_STATE_MISMATCH"))
                 .andExpect(jsonPath("$.message").value("OAuth2 state 파라미터가 일치하지 않습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -324,12 +324,12 @@ class AuthControllerTest {
     void handleCallback_Fail_TokenError() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("invalid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "invalid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_TOKEN_ERROR));
 
         // When & Then
@@ -343,7 +343,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_TOKEN_ERROR"))
                 .andExpect(jsonPath("$.message").value("OAuth2 액세스 토큰 획득에 실패했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -351,12 +351,12 @@ class AuthControllerTest {
     void handleCallback_Fail_UserInfoError() throws Exception {
         // Given
         String provider = "kakao";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.OAUTH2_USER_INFO_ERROR));
 
         // When & Then
@@ -370,7 +370,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("OAUTH2_USER_INFO_ERROR"))
                 .andExpect(jsonPath("$.message").value("OAuth2 사용자 정보 획득에 실패했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -378,12 +378,12 @@ class AuthControllerTest {
     void handleCallback_Fail_SocialAccountConflict() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new OAuth2Exception(ErrorCode.SOCIAL_ACCOUNT_CONFLICT));
 
         // When & Then
@@ -397,7 +397,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("SOCIAL_ACCOUNT_CONFLICT"))
                 .andExpect(jsonPath("$.message").value("이미 다른 소셜 계정으로 연결된 이메일입니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     @Test
@@ -405,12 +405,12 @@ class AuthControllerTest {
     void handleCallback_Fail_InternalServerError() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
-        when(oAuth2Service.processCallback(provider, request.getCode(), request.getState()))
+        when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenThrow(new RuntimeException("Database connection failed"));
 
         // When & Then
@@ -424,7 +424,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."));
 
-        verify(oAuth2Service).processCallback(provider, request.getCode(), request.getState());
+        verify(oAuth2Service).processCallback(provider, request.code(), request.state());
     }
 
     // === 요청 검증 테스트 ===
@@ -434,10 +434,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingCode() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("") // 빈 문자열
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "", // 빈 문자열
+                "valid-state"
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -458,10 +458,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingState() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("") // 빈 문자열
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "" // 빈 문자열
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -501,10 +501,10 @@ class AuthControllerTest {
     void handleCallback_Fail_MissingContentType() throws Exception {
         // Given
         String provider = "google";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-auth-code")
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-auth-code",
+                "valid-state"
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/oauth2/{provider}/callback", provider)
@@ -526,11 +526,11 @@ class AuthControllerTest {
     void generateAuthUrl_VariousClientIpHeaders() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize")
-                .state("test-state")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize",
+                "test-state",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -556,11 +556,11 @@ class AuthControllerTest {
     void generateAuthUrl_NoUserAgent() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize")
-                .state("test-state")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize",
+                "test-state",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -577,22 +577,22 @@ class AuthControllerTest {
         // Given
         String provider = "google";
         String longAuthCode = "a".repeat(1000); // 1000자 인증 코드
-        CallbackRequest request = CallbackRequest.builder()
-                .code(longAuthCode)
-                .state("valid-state")
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                longAuthCode,
+                "valid-state"
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockResponse = LoginResponse.builder()
-                .userId(1L)
-                .email("test@example.com")
-                .nickname("테스트")
-                .userType(UserType.USER)
-                .accessToken("token")
-                .refreshToken("refresh")
-                .build();
+        LoginResponse mockResponse = new LoginResponse(
+                1L,
+                "test@example.com",
+                "테스트",
+                UserType.USER,
+                "token",
+                "refresh"
+        );
 
         when(oAuth2Service.processCallback(provider, longAuthCode, "valid-state"))
                 .thenReturn(mockResponse);
@@ -614,22 +614,22 @@ class AuthControllerTest {
         // Given
         String provider = "kakao";
         String specialState = "state-with-special-chars-!@#$%^&*()_+-=[]{}|;:,.<>?";
-        CallbackRequest request = CallbackRequest.builder()
-                .code("valid-code")
-                .state(specialState)
-                .build();
+        CallbackRequest request = new CallbackRequest(
+                "valid-code",
+                specialState
+        );
 
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockResponse = LoginResponse.builder()
-                .userId(2L)
-                .email("kakao@example.com")
-                .nickname("카카오")
-                .userType(UserType.USER)
-                .accessToken("token")
-                .refreshToken("refresh")
-                .build();
+        LoginResponse mockResponse = new LoginResponse(
+                2L,
+                "kakao@example.com",
+                "카카오",
+                UserType.USER,
+                "token",
+                "refresh"
+        );
 
         when(oAuth2Service.processCallback(provider, "valid-code", specialState))
                 .thenReturn(mockResponse);
@@ -667,8 +667,7 @@ class AuthControllerTest {
     void requestPasswordReset_Success() throws Exception {
         // Given
         String email = "test@example.com";
-        PasswordResetRequest request = new PasswordResetRequest();
-        // request.setEmail(email); // Lombok @Getter만 있으므로 JSON으로 직접 전송
+        PasswordResetRequest request = new PasswordResetRequest(email);
 
         doNothing().when(passwordResetService).requestResetWithOtp(email);
 
@@ -769,10 +768,11 @@ class AuthControllerTest {
         String otp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                newPassword
+        );
 
         doNothing().when(passwordResetService).verifyOtpAndReset(email, otp, newPassword);
 
@@ -799,10 +799,11 @@ class AuthControllerTest {
         String invalidOtp = "999999";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(invalidOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                invalidOtp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_OTP_INVALID, email))
                 .when(passwordResetService).verifyOtpAndReset(email, invalidOtp, newPassword);
@@ -827,10 +828,11 @@ class AuthControllerTest {
         String expiredOtp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(expiredOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                expiredOtp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_OTP_EXPIRED, email))
                 .when(passwordResetService).verifyOtpAndReset(email, expiredOtp, newPassword);
@@ -855,10 +857,11 @@ class AuthControllerTest {
         String otp = "123456";
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                newPassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.USER_NOT_FOUND, email))
                 .when(passwordResetService).verifyOtpAndReset(email, otp, newPassword);
@@ -883,10 +886,11 @@ class AuthControllerTest {
         String otp = "123456";
         String samePassword = "oldPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(samePassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                samePassword
+        );
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_SAME_AS_OLD, email))
                 .when(passwordResetService).verifyOtpAndReset(email, otp, samePassword);
@@ -911,10 +915,11 @@ class AuthControllerTest {
         String invalidOtp = "12345"; // 5자리
         String newPassword = "newPassword123!";
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(invalidOtp);
-        request.setNewPassword(newPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                invalidOtp,
+                newPassword
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/verify-and-reset")
@@ -936,10 +941,11 @@ class AuthControllerTest {
         String otp = "123456";
         String shortPassword = "123"; // 3자리
         
-        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest();
-        request.setEmail(email);
-        request.setOtp(otp);
-        request.setNewPassword(shortPassword);
+        PasswordResetVerifyRequest request = new PasswordResetVerifyRequest(
+                email,
+                otp,
+                shortPassword
+        );
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/verify-and-reset")
@@ -958,8 +964,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_Success() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doNothing().when(passwordResetService).resendResetOtp(email);
 
@@ -983,8 +988,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_UserNotFound() throws Exception {
         // Given
         String email = "nonexistent@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.USER_NOT_FOUND, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1006,8 +1010,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_LimitExceeded() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1029,8 +1032,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_TooFrequent() throws Exception {
         // Given
         String email = "test@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_RESEND_TOO_FREQUENT, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1052,8 +1054,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_SocialUser() throws Exception {
         // Given
         String email = "social@example.com";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(email);
+        ResendOtpRequest request = new ResendOtpRequest(email);
 
         doThrow(new PasswordResetException(ErrorCode.PASSWORD_RESET_NOT_ALLOWED, email))
                 .when(passwordResetService).resendResetOtp(email);
@@ -1075,8 +1076,7 @@ class AuthControllerTest {
     void resendPasswordResetOtp_InvalidEmailFormat() throws Exception {
         // Given
         String invalidEmail = "invalid-email";
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail(invalidEmail);
+        ResendOtpRequest request = new ResendOtpRequest(invalidEmail);
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/resend-otp")
@@ -1094,8 +1094,7 @@ class AuthControllerTest {
     @DisplayName("비밀번호 재설정 OTP 재전송 - 빈 이메일")
     void resendPasswordResetOtp_EmptyEmail() throws Exception {
         // Given
-        ResendOtpRequest request = new ResendOtpRequest();
-        request.setEmail("");
+        ResendOtpRequest request = new ResendOtpRequest("");
 
         // When & Then
         mockMvc.perform(post("/api/auth/password/resend-otp")
