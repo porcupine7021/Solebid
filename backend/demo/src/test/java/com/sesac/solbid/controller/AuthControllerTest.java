@@ -80,11 +80,11 @@ class AuthControllerTest {
     void generateAuthUrl_Success_Google() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize?client_id=test&state=test-state")
-                .state("test-state-12345")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize?client_id=test&state=test-state",
+                "test-state-12345",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -96,7 +96,7 @@ class AuthControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("OAuth2 인증 URL이 생성되었습니다."))
-                .andExpect(jsonPath("$.data.authUrl").value(mockResponse.getAuthUrl()));
+                .andExpect(jsonPath("$.data.authUrl").value(mockResponse.authUrl()));
 
         verify(oAuth2Service).generateAuthUrl(provider);
     }
@@ -106,11 +106,11 @@ class AuthControllerTest {
     void generateAuthUrl_Success_Kakao() throws Exception {
         // Given
         String provider = "kakao";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://kauth.kakao.com/oauth/authorize?client_id=test&state=kakao-state")
-                .state("kakao-state-67890")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://kauth.kakao.com/oauth/authorize?client_id=test&state=kakao-state",
+                "kakao-state-67890",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -140,14 +140,14 @@ class AuthControllerTest {
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockLoginResponse = LoginResponse.builder()
-                .userId(1L)
-                .email("test@gmail.com")
-                .nickname("테스트사용자")
-                .userType(UserType.USER)
-                .accessToken("jwt-access-token")
-                .refreshToken("jwt-refresh-token")
-                .build();
+        LoginResponse mockLoginResponse = new LoginResponse(
+                1L,
+                "test@gmail.com",
+                "테스트사용자",
+                UserType.USER,
+                "jwt-access-token",
+                "jwt-refresh-token"
+        );
 
         when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
@@ -200,14 +200,14 @@ class AuthControllerTest {
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockLoginResponse = LoginResponse.builder()
-                .userId(2L)
-                .email("user@kakao.com")
-                .nickname("카카오사용자")
-                .userType(UserType.USER)
-                .accessToken("kakao-jwt-access")
-                .refreshToken("kakao-jwt-refresh")
-                .build();
+        LoginResponse mockLoginResponse = new LoginResponse(
+                2L,
+                "user@kakao.com",
+                "카카오사용자",
+                UserType.USER,
+                "kakao-jwt-access",
+                "kakao-jwt-refresh"
+        );
 
         when(oAuth2Service.processCallback(provider, request.code(), request.state()))
                 .thenReturn(mockLoginResponse);
@@ -526,11 +526,11 @@ class AuthControllerTest {
     void generateAuthUrl_VariousClientIpHeaders() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize")
-                .state("test-state")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize",
+                "test-state",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -556,11 +556,11 @@ class AuthControllerTest {
     void generateAuthUrl_NoUserAgent() throws Exception {
         // Given
         String provider = "google";
-        AuthUrlResponse mockResponse = AuthUrlResponse.builder()
-                .authUrl("https://accounts.google.com/oauth/authorize")
-                .state("test-state")
-                .provider(provider)
-                .build();
+        AuthUrlResponse mockResponse = new AuthUrlResponse(
+                "https://accounts.google.com/oauth/authorize",
+                "test-state",
+                provider
+        );
 
         when(oAuth2Service.generateAuthUrl(provider)).thenReturn(mockResponse);
 
@@ -585,14 +585,14 @@ class AuthControllerTest {
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockResponse = LoginResponse.builder()
-                .userId(1L)
-                .email("test@example.com")
-                .nickname("테스트")
-                .userType(UserType.USER)
-                .accessToken("token")
-                .refreshToken("refresh")
-                .build();
+        LoginResponse mockResponse = new LoginResponse(
+                1L,
+                "test@example.com",
+                "테스트",
+                UserType.USER,
+                "token",
+                "refresh"
+        );
 
         when(oAuth2Service.processCallback(provider, longAuthCode, "valid-state"))
                 .thenReturn(mockResponse);
@@ -622,14 +622,14 @@ class AuthControllerTest {
         when(jwtUtil.getAccessTokenValiditySeconds()).thenReturn(3600L);
         when(jwtUtil.getRefreshTokenValiditySeconds()).thenReturn(86400L);
 
-        LoginResponse mockResponse = LoginResponse.builder()
-                .userId(2L)
-                .email("kakao@example.com")
-                .nickname("카카오")
-                .userType(UserType.USER)
-                .accessToken("token")
-                .refreshToken("refresh")
-                .build();
+        LoginResponse mockResponse = new LoginResponse(
+                2L,
+                "kakao@example.com",
+                "카카오",
+                UserType.USER,
+                "token",
+                "refresh"
+        );
 
         when(oAuth2Service.processCallback(provider, "valid-code", specialState))
                 .thenReturn(mockResponse);

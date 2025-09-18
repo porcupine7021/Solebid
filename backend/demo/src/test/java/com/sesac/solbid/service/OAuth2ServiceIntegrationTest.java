@@ -130,10 +130,10 @@ class OAuth2ServiceIntegrationTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getUserId()).isEqualTo(testUser.getUserId());
-        assertThat(response.getEmail()).isEqualTo(testUser.getEmail());
-        assertThat(response.getAccessToken()).isEqualTo("jwt-access-token");
-        assertThat(response.getRefreshToken()).isEqualTo("jwt-refresh-token");
+        assertThat(response.userId()).isEqualTo(testUser.getUserId());
+        assertThat(response.email()).isEqualTo(testUser.getEmail());
+        assertThat(response.accessToken()).isEqualTo("jwt-access-token");
+        assertThat(response.refreshToken()).isEqualTo("jwt-refresh-token");
 
         // 토큰 요청 검증
         RecordedRequest tokenRequest = mockWebServer.takeRequest(1, TimeUnit.SECONDS);
