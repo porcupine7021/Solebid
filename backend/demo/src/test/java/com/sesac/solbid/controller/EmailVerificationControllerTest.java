@@ -1,7 +1,6 @@
 package com.sesac.solbid.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sesac.solbid.config.WebConfig;
 import com.sesac.solbid.dto.auth.request.ResendVerificationRequest;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.EmailVerificationException;
@@ -29,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = EmailVerificationController.class)
 @TestPropertySource(properties = "spring.main.web-application-type=servlet")
 @AutoConfigureMockMvc(addFilters = false)
-@Import({WebConfig.class, GlobalExceptionHandler.class})
+@Import({GlobalExceptionHandler.class})
 @DisplayName("EmailVerificationController 테스트")
 class EmailVerificationControllerTest {
 

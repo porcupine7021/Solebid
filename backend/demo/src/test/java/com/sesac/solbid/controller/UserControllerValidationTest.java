@@ -1,7 +1,6 @@
 package com.sesac.solbid.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sesac.solbid.config.WebConfig;
 import com.sesac.solbid.exception.GlobalExceptionHandler;
 import com.sesac.solbid.repository.SocialLoginRepository;
 import com.sesac.solbid.service.auth.SocialUnlinkService;
@@ -29,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = UserController.class)
 @TestPropertySource(properties = "spring.main.web-application-type=servlet")
 @AutoConfigureMockMvc(addFilters = false)
-@Import({WebConfig.class, GlobalExceptionHandler.class, CookieUtil.class})
+@Import({GlobalExceptionHandler.class, CookieUtil.class})
 @DisplayName("UserController 유효성 검증 테스트")
 class UserControllerValidationTest {
 

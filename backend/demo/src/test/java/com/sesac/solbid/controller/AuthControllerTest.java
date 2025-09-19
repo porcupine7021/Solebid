@@ -1,7 +1,6 @@
 package com.sesac.solbid.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sesac.solbid.config.WebConfig;
 import com.sesac.solbid.domain.enums.UserType;
 import com.sesac.solbid.dto.user.response.LoginResponse;
 import com.sesac.solbid.exception.ErrorCode;
@@ -48,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = AuthController.class)
 @TestPropertySource(properties = "spring.main.web-application-type=servlet")
 @AutoConfigureMockMvc(addFilters = false)
-@Import({WebConfig.class, GlobalExceptionHandler.class, CookieUtil.class})
+@Import({GlobalExceptionHandler.class, CookieUtil.class})
 @DisplayName("AuthController 통합 테스트")
 class AuthControllerTest {
 

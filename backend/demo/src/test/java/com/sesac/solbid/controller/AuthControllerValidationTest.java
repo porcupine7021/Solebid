@@ -1,7 +1,6 @@
 package com.sesac.solbid.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sesac.solbid.config.WebConfig;
 import com.sesac.solbid.exception.GlobalExceptionHandler;
 import com.sesac.solbid.service.auth.OAuth2Service;
 import com.sesac.solbid.service.user.PasswordResetService;
@@ -28,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = AuthController.class)
 @TestPropertySource(properties = "spring.main.web-application-type=servlet")
 @AutoConfigureMockMvc(addFilters = false)
-@Import({WebConfig.class, GlobalExceptionHandler.class, CookieUtil.class})
+@Import({GlobalExceptionHandler.class, CookieUtil.class})
 @DisplayName("AuthController 유효성 검증 테스트")
 class AuthControllerValidationTest {
 
