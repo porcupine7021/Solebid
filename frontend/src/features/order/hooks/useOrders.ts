@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { getPresignedUrls } from '../../product/services/ProductService.ts';
 import { fetchCreateOrder, fetchOrderDetails, fetchWinningOrders, type OrderCreatePayload } from '../services/OrderService.ts';
 import type { Order } from '../types/Order.ts';
+import { enrichOrderData } from '../utils/orderDataTransform.ts';
 
 // Query key factory with better type safety
 const orderKeys = {
@@ -10,7 +11,7 @@ const orderKeys = {
     lists: () => [...orderKeys.all, 'list'] as const,
     list: (filters: string) => [...orderKeys.lists(), { filters }] as const,
     details: () => [...orderKeys.all, 'detail'] as const,
-    detail: (id: number) => [...orderKeys.details(), id] as const,
+    detail: (id: string | number) => [...orderKeys.details(), id] as const,
 };
 
 // Default query options for consistency
@@ -93,7 +94,7 @@ export const useWinningOrders = (options?: Partial<UseQueryOptions<Order[]>>) =>
 };
 
 export const useOrderDetails = (
-    orderId: number,
+    orderId: string | number,
     options?: Partial<UseQueryOptions<Order>>
 ) => {
     const [orderWithImages, setOrderWithImages] = useState<Order | undefined>();
@@ -118,7 +119,8 @@ export const useOrderDetails = (
             }
 
             if (isError) {
-                setOrderWithImages(order);
+                const enrichedOrder = enrichOrderData(order);
+                setOrderWithImages(enrichedOrder);
                 return;
             }
 
@@ -129,7 +131,8 @@ export const useOrderDetails = (
                 const imageKeys = order.items?.map(item => item.image).filter(Boolean) || [];
 
                 if (imageKeys.length === 0) {
-                    setOrderWithImages(order);
+                    const enrichedOrder = enrichOrderData(order);
+                    setOrderWithImages(enrichedOrder);
                     return;
                 }
 
@@ -143,11 +146,13 @@ export const useOrderDetails = (
                     })) || [],
                 };
 
-                setOrderWithImages(orderWithUrls);
+                const enrichedOrder = enrichOrderData(orderWithUrls);
+                setOrderWithImages(enrichedOrder);
             } catch (error) {
                 console.error('Error fetching presigned URLs for order:', error);
                 setImageError('이미지를 불러오는데 실패했습니다.');
-                setOrderWithImages(order);
+                const enrichedOrder = enrichOrderData(order);
+                setOrderWithImages(enrichedOrder);
             } finally {
                 setIsLoadingImages(false);
             }

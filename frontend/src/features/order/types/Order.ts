@@ -1,7 +1,7 @@
-import type {OrderItem} from "./OrderItem";
-import type {OrderPayment} from "./OrderPayment";
-import type {OrderShipping} from "./OrderShipping";
-import type {OrderTimeline} from "./OrderTimeline";
+import type { OrderItem } from "./OrderItem";
+import type { OrderPayment } from "./OrderPayment";
+import type { OrderShipping } from "./OrderShipping";
+import type { OrderTimeline } from "./OrderTimeline";
 
 export interface Order {
     id: string;
@@ -12,12 +12,15 @@ export interface Order {
     statusColor: string;
     trackingNumber: string;
     deliveryAddress: string;
-    payment?: OrderPayment;
-    shipping?: OrderShipping;
-    timeline?: OrderTimeline[];
     auctionId?: number;
     winnerId?: number;
     sellerId?: number;
+    paymentStatus?: string;
+    deliveryStatus?: string;
+    orderDate?: string;
+    payment?: OrderPayment;
+    shipping?: OrderShipping;
+    timeline?: OrderTimeline[];
 }
 
 export interface OrderProps {
