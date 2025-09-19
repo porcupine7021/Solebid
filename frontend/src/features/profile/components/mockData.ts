@@ -13,18 +13,6 @@ export const bidData: ProfileBidProps[] = [
     { id: 3, name: "스마트폰 케이스", date: "2024.01.10", price: "15,000원", imageUrl: "https://readdy.ai/api/search-image?query=modern%20smartphone%20case%20clear%20transparent%20design%20clean%20white%20background%20product%20photography%20professional%20lighting%20high%20quality&width=60&height=60&seq=product003&orientation=squarish" },
 ];
 
-// 레거시 통계 데이터 - 추후 작업에서 온도 데이터로 교체될 예정
-export interface LegacyProfileStatProps {
-    label: string;
-    value: string | number;
-    color: string;
-}
-
-export const statsData: LegacyProfileStatProps[] = [
-    { label: "총 주문", value: 12, color: "text-blue-600" },
-    { label: "적립 포인트", value: "2,450", color: "text-purple-600" },
-];
-
 export const transactionData: ProfileTransactionProps[] = [
     { id: 1, name: "럭셔리 시계", date: "2024.01.15", price: "299,000원", imageUrl: "https://readdy.ai/api/search-image?query=elegant%20watch%20luxury%20timepiece%20silver%20metal%20band%20clean%20white%20background%20product%20photography%20professional%20lighting%20high%20quality&width=120&height=120&seq=wishlist001&orientation=squarish" },
     { id: 2, name: "노트북", date: "2024.01.12", price: "1,299,000원", imageUrl: "https://readdy.ai/api/search-image?query=modern%20laptop%20computer%20silver%20aluminum%20design%20clean%20white%20background%20product%20photography%20professional%20lighting%20high%20quality&width=120&height=120&seq=wishlist002&orientation=squarish" },
