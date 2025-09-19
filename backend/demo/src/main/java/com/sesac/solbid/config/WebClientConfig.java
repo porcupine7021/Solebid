@@ -7,11 +7,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class WebClientConfig implements WebMvcConfigurer {
+public class WebClientConfig {
     //겹쳐서 후에 수정 예정
 
     @Value("${portone.base-url}")
@@ -27,12 +25,5 @@ public class WebClientConfig implements WebMvcConfigurer {
                 .build();
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")       // 개발 중엔 전체 허용
-                .allowedMethods("*")       // GET, POST 등 허용
-                .allowedHeaders("*")       // 모든 헤더 허용
-                .allowCredentials(false);  // 필요 시 true로 설정
-    }
+
 }

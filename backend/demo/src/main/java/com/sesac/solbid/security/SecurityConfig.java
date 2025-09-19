@@ -71,11 +71,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 오리진 설정 (프론트엔드 주소)
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        // 허용할 오리진 설정
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*", 
+                "http://127.0.0.1:*"
+        ));
         
-        // 허용할 HTTP 메서드
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        // 허용할 HTTP 메서드 설정
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
         
         // 허용할 헤더
         configuration.setAllowedHeaders(Arrays.asList("*"));
