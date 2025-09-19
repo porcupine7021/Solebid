@@ -29,10 +29,7 @@ const OrderDetailShipping = ({ shipping }: OrderDetailShippingProps) => {
                     </span>
                     <div className="mt-1">
                         <p className="font-medium">
-                            ({shipping.zipCode}) {shipping.address}
-                        </p>
-                        <p className="font-medium">
-                            {shipping.addressDetail}
+                            {shipping.address}
                         </p>
                     </div>
                 </div>
@@ -52,11 +49,6 @@ const OrderDetailShipping = ({ shipping }: OrderDetailShippingProps) => {
                         <span className="font-medium">
                             {shipping.trackingNumber}
                         </span>
-                        <button
-                            onClick={() => { }}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer !rounded-button whitespace-nowrap">
-                            배송 추적
-                        </button>
                     </div>
                 </div>
                 <div className="flex justify-between">

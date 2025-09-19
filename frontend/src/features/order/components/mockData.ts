@@ -1,4 +1,7 @@
 import type { Order } from "../types/Order";
+import type { OrderPayment } from "../types/OrderPayment";
+import type { OrderShipping } from "../types/OrderShipping";
+import type { OrderTimeline } from "../types/OrderTimeline";
 
 export const periods = [
     "전체",
@@ -17,92 +20,84 @@ export const statuses = [
     "취소·반품",
 ];
 
-export const orders: Order[] = [
-    {
-        id: "ORD-2024-001234",
-        date: "2024.01.15",
-        items: [
-            {
-                name: "무선 블루투스 헤드폰",
-                image:
-                    "https://readdy.ai/api/search-image?query=modern%20wireless%20bluetooth%20headphones%20black%20color%20clean%20white%20background%20product%20photography%20professional%20lighting%20high%20quality&width=80&height=80&seq=order001&orientation=squarish",
-                price: 89000,
-                options: "블랙, 노이즈캔슬링",
-            },
-        ],
-        finalPrice: 89000,
-        status: "배송완료",
-        statusColor: "green",
-        trackingNumber: "CJ1234567890",
-        deliveryAddress: "서울특별시 강남구 테헤란로 123 ABC빌딩 456호",
-        payment: {
-            method: "신용카드",
-            cardInfo: "KB국민카드 ****-****-****-1234",
-            status: "결제완료",
-            itemAmount: 89000,
-            shippingFee: 0,
-            discount: 0,
-            finalAmount: 89000,
-        },
-        shipping: {
-            recipient: "김철수",
-            phone: "010-1234-5678",
-            address: "서울특별시 강남구 테헤란로 123",
-            addressDetail: "ABC빌딩 456호",
-            zipCode: "06142",
-            request: "부재시 경비실에 맡겨주세요",
-            trackingNumber: "CJ1234567890",
-            courier: "CJ대한통운",
-        },
-        timeline: [
-            { status: "주문접수", date: "2024.01.15 14:32", completed: true },
-            { status: "결제완료", date: "2024.01.15 14:33", completed: true },
-            { status: "상품준비중", date: "2024.01.15 16:20", completed: true },
-            { status: "배송시작", date: "2024.01.16 09:15", completed: true },
-            { status: "배송완료", date: "2024.01.17 11:30", completed: true },
-        ],
-    },
-    {
-        id: "ORD-2024-001233",
-        date: "2024.01.12",
-        items: [
-            {
-                name: "프리미엄 원두 커피",
-                image:
-                    "https://readdy.ai/api/search-image?query=premium%20coffee%20beans%20package%20bag%20dark%20roast%20clean%20white%20background%20product%20photography%20professional%20lighting%20high%20quality&width=80&height=80&seq=order002&orientation=squarish",
-                price: 25000,
-            },
-        ],
-        finalPrice: 25000,
-        status: "배송중",
-        statusColor: "blue",
-        trackingNumber: "CJ0987654321",
-        deliveryAddress: "서울특별시 강남구 테헤란로 123 ABC빌딩 456호",
-        payment: {
-            method: "카카오페이",
-            status: "결제완료",
-            itemAmount: 25000,
-            shippingFee: 3000,
-            discount: 0,
-            finalAmount: 28000,
-        },
-        shipping: {
-            recipient: "이영희",
-            phone: "010-9876-5432",
-            address: "서울특별시 서초구 서초대로 456",
-            addressDetail: "DEF 오피스텔 789호",
-            zipCode: "06610",
-            request: "문 앞에 놓아주세요.",
-            trackingNumber: "CJ0987654321",
-            courier: "CJ대한통운",
-        },
-        timeline: [
-            { status: "주문접수", date: "2024.01.12 10:00", completed: true },
-            { status: "결제완료", date: "2024.01.12 10:01", completed: true },
-            { status: "상품준비중", date: "2024.01.12 11:30", completed: true },
-            { status: "배송시작", date: "2024.01.13 14:00", completed: true },
-            { status: "배송중", date: "2024.01.14 09:00", completed: true },
-            { status: "배송완료", date: "", completed: false },
-        ],
-    },
-];
+// API 응답 데이터를 기반으로 payment 정보 구성
+export const createPaymentInfo = (order: Order): OrderPayment => {
+    return {
+        method: "신용카드", // 기본값, 실제로는 API에서 제공해야 함
+        cardInfo: "****-****-****-****", // 기본값
+        status: order.paymentStatus === "COMPLETED" ? "결제완료" :
+            order.paymentStatus === "WAITING" ? "결제대기" : "결제실패",
+        itemAmount: order.finalPrice,
+        shippingFee: 0, // 기본값
+        discount: 0, // 기본값
+        finalAmount: order.finalPrice,
+    };
+};
+
+// API 응답 데이터를 기반으로 shipping 정보 구성
+export const createShippingInfo = (order: Order): OrderShipping => {
+    return {
+        recipient: "수령인", // 기본값, 실제로는 API에서 제공해야 함
+        phone: "010-****-****", // 기본값
+        address: order.deliveryAddress || "",
+        request: "", // 기본값
+        trackingNumber: order.trackingNumber || "",
+        courier: "택배사", // 기본값
+    };
+};
+
+// API 응답 데이터를 기반으로 timeline 정보 구성
+export const createTimelineInfo = (order: Order): OrderTimeline[] => {
+    const timeline: OrderTimeline[] = [
+        { status: "주문접수", date: order.date, completed: true },
+    ];
+
+    // paymentStatus에 따른 결제 상태 추가
+    if (order.paymentStatus === "COMPLETED") {
+        timeline.push({ status: "결제완료", date: order.date, completed: true });
+    } else if (order.paymentStatus === "WAITING") {
+        timeline.push({ status: "결제대기", date: "", completed: false });
+        return timeline;
+    } else if (order.paymentStatus === "FAIL") {
+        timeline.push({ status: "결제실패", date: order.date, completed: true });
+        return timeline;
+    }
+
+    // deliveryStatus에 따른 배송 상태 추가
+    switch (order.deliveryStatus) {
+        case "PREPARING":
+            timeline.push({ status: "상품준비중", date: order.date, completed: true });
+            timeline.push({ status: "배송시작", date: "", completed: false });
+            timeline.push({ status: "배송완료", date: "", completed: false });
+            break;
+        case "SHIPPED":
+            timeline.push({ status: "상품준비중", date: order.date, completed: true });
+            timeline.push({ status: "배송시작", date: order.date, completed: true });
+            timeline.push({ status: "배송완료", date: "", completed: false });
+            break;
+        case "DELIVERED":
+            timeline.push({ status: "상품준비중", date: order.date, completed: true });
+            timeline.push({ status: "배송시작", date: order.date, completed: true });
+            timeline.push({ status: "배송완료", date: order.date, completed: true });
+            break;
+        case "CANCELED":
+            timeline.push({ status: "취소·반품", date: order.date, completed: true });
+            break;
+        default:
+            timeline.push({ status: "상품준비중", date: "", completed: false });
+            timeline.push({ status: "배송시작", date: "", completed: false });
+            timeline.push({ status: "배송완료", date: "", completed: false });
+    }
+
+    return timeline;
+};
+
+// Order 객체에 추가 정보를 구성하여 반환
+export const enrichOrderData = (order: Order): Order => {
+    return {
+        ...order,
+        payment: createPaymentInfo(order),
+        shipping: createShippingInfo(order),
+        timeline: createTimelineInfo(order),
+    };
+};
