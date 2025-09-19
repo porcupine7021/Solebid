@@ -1,6 +1,7 @@
 import { createBrowserRouter, createRoutesFromElements, Route } from 'react-router-dom';
 
 import AuctionPage from './features/auction/pages/AuctionPage';
+import AuctionDetailPage from './features/auction/pages/AuctionDetailPage';
 import CartPage from './features/cart/pages/CartPage';
 import CategoryPage from './features/category/pages/CategoryPage';
 import MainPage from './features/main/pages/MainPage';
@@ -20,7 +21,8 @@ import NicknameSetup from "./features/user/pages/NicknameSetup.tsx";
 import OAuth2Callback from "./features/user/pages/OAuth2Callback.tsx";
 import Signup from "./features/user/pages/Signup.tsx";
 import FindPassword from './features/user/pages/FindPassword';
-import ResetPassword from './features/user/pages/ResetPassword';
+import PasswordResetOtp from './features/user/pages/PasswordResetOtp';
+import PasswordResetSuccess from './features/user/pages/PasswordResetSuccess';
 import EmailVerificationPage from './features/user/pages/EmailVerificationPage';
 import EmailVerificationSuccess from './features/user/pages/EmailVerificationSuccess';
 
@@ -41,6 +43,7 @@ const router = createBrowserRouter(
             <Route path="/auth/callback/:provider" element={<OAuth2Callback />} />
             <Route path="/nickname-setup" element={<NicknameSetup />} />
             <Route path="/auction" element={<AuctionPage />} />
+            <Route path="/auction/:auctionId" element={<AuctionDetailPage />} />
             <Route path="/category/:categoryName" element={<CategoryPage />} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/order" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
@@ -58,7 +61,8 @@ const router = createBrowserRouter(
             <Route path="/transaction" element={<ProtectedRoute><TransactionPage /></ProtectedRoute>} />
             <Route path="/transaction/:orderId" element={<ProtectedRoute><TransactionDetailPage /></ProtectedRoute>} />
             <Route path="/find-password" element={<FindPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/password-reset-otp" element={<PasswordResetOtp />} />
+            <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
             <Route path="/email-verification" element={<EmailVerificationPage />} />
             <Route path="/email-verification-success" element={<EmailVerificationSuccess />} />
         </Route>

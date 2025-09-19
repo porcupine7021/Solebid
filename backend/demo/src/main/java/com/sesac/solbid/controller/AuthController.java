@@ -26,7 +26,10 @@ import com.sesac.solbid.dto.auth.request.CallbackRequest;
 import com.sesac.solbid.dto.auth.response.LoginSuccessResponse;
 import com.sesac.solbid.dto.user.response.LoginResponse;
 import com.sesac.solbid.dto.auth.request.PasswordResetRequest;
-import com.sesac.solbid.dto.auth.request.PasswordResetConfirmRequest;
+import com.sesac.solbid.dto.auth.request.PasswordResetOtpVerifyRequest;
+import com.sesac.solbid.dto.auth.request.PasswordResetVerifyRequest;
+import com.sesac.solbid.dto.auth.request.ResendOtpRequest;
+
 
 /**
  * 인증 컨트롤러
@@ -92,7 +95,7 @@ public class AuthController {
             AuthUrlResponse response = oAuth2Service.generateAuthUrl(provider);
 
             log.info("OAuth2 인증 URL 생성 성공: provider={}, clientIp={}, state={}", 
-                    provider, clientIp, maskState(response.getState()));
+                    provider, clientIp, maskState(response.state()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(response, "OAuth2 인증 URL이 생성되었습니다.")
@@ -132,42 +135,42 @@ public class AuthController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("OAuth2 콜백 처리 요청: provider={}, clientIp={}, userAgent={}, state={}", 
-                provider, clientIp, maskUserAgent(userAgent), maskState(request.getState()));
+                provider, clientIp, maskUserAgent(userAgent), maskState(request.state()));
         
         try {
             LoginResponse response = oAuth2Service.processCallback(
-                provider, request.getCode(), request.getState()
+                provider, request.code(), request.state()
             );
             
             // HttpOnly 쿠키로 토큰 설정
             cookieUtil.addTokenCookies(
                 httpResponse,
-                response.getAccessToken(), jwtUtil.getAccessTokenValiditySeconds(),
-                response.getRefreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
+                response.accessToken(), jwtUtil.getAccessTokenValiditySeconds(),
+                response.refreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
             );
 
             // 임시 닉네임인지 여부 판단 (user_ 접두어)
-            boolean requiresNickname = response.getNickname() != null && response.getNickname().startsWith("user_");
+            boolean requiresNickname = response.nickname() != null && response.nickname().startsWith("user_");
 
             // 응답에서는 토큰 제외하고 사용자 정보만 반환
-            LoginSuccessResponse loginSuccessResponse = LoginSuccessResponse.builder()
-                    .userId(response.getUserId())
-                    .email(response.getEmail())
-                    .nickname(response.getNickname())
-                    .userType(response.getUserType())
-                    .provider(provider)
-                    .requiresNickname(requiresNickname)
-                    .build();
+            LoginSuccessResponse loginSuccessResponse = new LoginSuccessResponse(
+                    response.userId(),
+                    response.email(),
+                    response.nickname(),
+                    response.userType(),
+                    provider,
+                    requiresNickname
+            );
             
             log.info("OAuth2 콜백 처리 성공: provider={}, clientIp={}, userId={}, email={}", 
-                    provider, clientIp, response.getUserId(), maskEmail(response.getEmail()));
+                    provider, clientIp, response.userId(), maskEmail(response.email()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(loginSuccessResponse, "소셜로그인이 완료되었습니다.")
             );
         } catch (OAuth2Exception e) {
             log.warn("OAuth2 콜백 처리 실패: provider={}, clientIp={}, error={}, state={}", 
-                    provider, clientIp, e.getMessage(), maskState(request.getState()));
+                    provider, clientIp, e.getMessage(), maskState(request.state()));
             int status = (e.getErrorCode() == ErrorCode.SOCIAL_ACCOUNT_CONFLICT) ? 409 : 400;
             return ResponseEntity.status(status).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
@@ -183,13 +186,13 @@ public class AuthController {
             );
         } catch (CustomException e) {
             log.warn("OAuth2 콜백 처리 실패(Custom): provider={}, clientIp={}, error={}, state={}",
-                    provider, clientIp, e.getMessage(), maskState(request.getState()));
+                    provider, clientIp, e.getMessage(), maskState(request.state()));
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                     ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("OAuth2 콜백 처리 중 예외 발생: provider={}, clientIp={}, state={}", 
-                    provider, clientIp, maskState(request.getState()), e);
+                    provider, clientIp, maskState(request.state()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );
@@ -197,40 +200,130 @@ public class AuthController {
     }
 
     /**
-     * 비밀번호 재설정 요청
-     * POST /api/auth/password/forgot
+     * 비밀번호 재설정 OTP 요청
+     * POST /api/auth/password/request-reset
      */
-    @PostMapping("/password/forgot")
-    public ResponseEntity<ApiResponse<Object>> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+    @PostMapping("/password/request-reset")
+    public ResponseEntity<ApiResponse<Object>> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.info("비밀번호 재설정 OTP 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+        
         try {
-            passwordResetService.requestReset(request.getEmail());
-            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호 재설정 메일을 발송했습니다."));
+            passwordResetService.requestResetWithOtp(request.email());
+            
+            log.info("비밀번호 재설정 OTP 발송 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호 재설정 인증번호를 이메일로 발송했습니다."));
+            
         } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 요청 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 요청 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
     }
 
     /**
-     * 비밀번호 재설정 확인 및 변경
-     * POST /api/auth/password/reset
+     * 비밀번호 재설정 OTP 검증만 수행
+     * POST /api/auth/password/verify-otp
      */
-    @PostMapping("/password/reset")
-    public ResponseEntity<ApiResponse<Object>> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
+    @PostMapping("/password/verify-otp")
+    public ResponseEntity<ApiResponse<Object>> verifyPasswordResetOtp(
+            @Valid @RequestBody PasswordResetOtpVerifyRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+        
         try {
-            passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
-            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호가 재설정되었습니다."));
+            passwordResetService.verifyOtpOnly(request.email(), request.otp());
+            
+            log.info("비밀번호 재설정 OTP 검증 성공: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "인증번호가 확인되었습니다."));
+            
         } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 검증 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(request.email()), clientIp, e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus())
                     .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
         } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 검증 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(request.email()), clientIp, e);
             return ResponseEntity.internalServerError()
                     .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
         }
     }
+
+    /**
+     * 비밀번호 재설정 OTP 검증 및 비밀번호 변경
+     * POST /api/auth/password/verify-and-reset
+     */
+    @PostMapping("/password/verify-and-reset")
+    public ResponseEntity<ApiResponse<Object>> verifyOtpAndResetPassword(
+            @Valid @RequestBody PasswordResetVerifyRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.info("비밀번호 재설정 OTP 검증 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+        
+        try {
+            passwordResetService.verifyOtpAndReset(request.email(), request.otp(), request.newPassword());
+            
+            log.info("비밀번호 재설정 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "비밀번호가 성공적으로 재설정되었습니다."));
+            
+        } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 검증 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(request.email()), clientIp, e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 검증 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(request.email()), clientIp, e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 비밀번호 재설정 OTP 재전송
+     * POST /api/auth/password/resend-otp
+     */
+    @PostMapping("/password/resend-otp")
+    public ResponseEntity<ApiResponse<Object>> resendPasswordResetOtp(
+            @Valid @RequestBody ResendOtpRequest request,
+            HttpServletRequest httpRequest) {
+        
+        String clientIp = getClientIpAddress(httpRequest);
+        log.info("비밀번호 재설정 OTP 재전송 요청: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+        
+        try {
+            passwordResetService.resendResetOtp(request.email());
+            
+            log.info("비밀번호 재설정 OTP 재전송 완료: email={}, clientIp={}", maskEmail(request.email()), clientIp);
+            return ResponseEntity.ok(ApiResponse.success(Collections.emptyMap(), "인증번호를 다시 발송했습니다."));
+            
+        } catch (CustomException e) {
+            log.warn("비밀번호 재설정 OTP 재전송 실패: email={}, clientIp={}, error={}", 
+                    maskEmail(request.email()), clientIp, e.getMessage());
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("비밀번호 재설정 OTP 재전송 중 예외 발생: email={}, clientIp={}", 
+                    maskEmail(request.email()), clientIp, e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+
 
     /**
      * 클라이언트 IP 주소 추출 (프록시 고려)

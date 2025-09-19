@@ -99,10 +99,10 @@ public class EmailVerificationController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("이메일 인증번호 검증 요청: clientIp={}, userAgent={}, email={}, code={}", 
-                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()), maskCode(request.getVerificationCode()));
+                clientIp, maskUserAgent(userAgent), maskEmail(request.email()), maskCode(request.verificationCode()));
         
         try {
-            String email = emailVerificationService.verifyEmailWithCode(request.getEmail(), request.getVerificationCode());
+            String email = emailVerificationService.verifyEmailWithCode(request.email(), request.verificationCode());
             
             EmailVerificationResponse response = EmailVerificationResponse.success(
                     maskEmail(email), 
@@ -117,19 +117,19 @@ public class EmailVerificationController {
             
         } catch (EmailVerificationException e) {
             log.warn("이메일 인증번호 검증 실패: clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (CustomException e) {
             log.warn("이메일 인증번호 검증 실패(Custom): clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("이메일 인증번호 검증 중 예외 발생: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()), e);
+                    clientIp, maskEmail(request.email()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );
@@ -153,10 +153,10 @@ public class EmailVerificationController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("회원가입 전 이메일 인증번호 검증 요청: clientIp={}, userAgent={}, email={}, code={}", 
-                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()), maskCode(request.getVerificationCode()));
+                clientIp, maskUserAgent(userAgent), maskEmail(request.email()), maskCode(request.verificationCode()));
         
         try {
-            String email = emailVerificationService.verifyEmailForSignup(request.getEmail(), request.getVerificationCode());
+            String email = emailVerificationService.verifyEmailForSignup(request.email(), request.verificationCode());
             
             EmailVerificationResponse response = EmailVerificationResponse.success(
                     maskEmail(email), 
@@ -171,19 +171,19 @@ public class EmailVerificationController {
             
         } catch (EmailVerificationException e) {
             log.warn("회원가입 전 이메일 인증번호 검증 실패: clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (CustomException e) {
             log.warn("회원가입 전 이메일 인증번호 검증 실패(Custom): clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("회원가입 전 이메일 인증번호 검증 중 예외 발생: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()), e);
+                    clientIp, maskEmail(request.email()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );
@@ -207,13 +207,13 @@ public class EmailVerificationController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("회원가입 전 이메일 인증번호 전송 요청: clientIp={}, userAgent={}, email={}", 
-                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()));
+                clientIp, maskUserAgent(userAgent), maskEmail(request.email()));
         
         try {
-            emailVerificationService.sendVerificationForSignup(request.getEmail());
+            emailVerificationService.sendVerificationForSignup(request.email());
             
             log.info("회원가입 전 이메일 인증번호 전송 성공: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()));
+                    clientIp, maskEmail(request.email()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(Collections.emptyMap(), "인증번호를 전송했습니다.")
@@ -221,19 +221,19 @@ public class EmailVerificationController {
             
         } catch (EmailVerificationException e) {
             log.warn("회원가입 전 이메일 인증번호 전송 실패: clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (CustomException e) {
             log.warn("회원가입 전 이메일 인증번호 전송 실패(Custom): clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("회원가입 전 이메일 인증번호 전송 중 예외 발생: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()), e);
+                    clientIp, maskEmail(request.email()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );
@@ -257,13 +257,13 @@ public class EmailVerificationController {
         String userAgent = httpRequest.getHeader("User-Agent");
         
         log.info("이메일 인증 재전송 요청: clientIp={}, userAgent={}, email={}", 
-                clientIp, maskUserAgent(userAgent), maskEmail(request.getEmail()));
+                clientIp, maskUserAgent(userAgent), maskEmail(request.email()));
         
         try {
-            emailVerificationService.resendVerificationEmail(request.getEmail());
+            emailVerificationService.resendVerificationEmail(request.email());
             
             log.info("이메일 인증 재전송 성공: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()));
+                    clientIp, maskEmail(request.email()));
             
             return ResponseEntity.ok(
                 ApiResponse.success(Collections.emptyMap(), "인증번호를 재전송했습니다.")
@@ -271,19 +271,19 @@ public class EmailVerificationController {
             
         } catch (EmailVerificationException e) {
             log.warn("이메일 인증 재전송 실패: clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (CustomException e) {
             log.warn("이메일 인증 재전송 실패(Custom): clientIp={}, email={}, error={}", 
-                    clientIp, maskEmail(request.getEmail()), e.getMessage());
+                    clientIp, maskEmail(request.email()), e.getMessage());
             return ResponseEntity.status(e.getErrorCode().getStatus()).body(
                 ApiResponse.error(e.getErrorCode().name(), e.getMessage())
             );
         } catch (Exception e) {
             log.error("이메일 인증 재전송 중 예외 발생: clientIp={}, email={}", 
-                    clientIp, maskEmail(request.getEmail()), e);
+                    clientIp, maskEmail(request.email()), e);
             return ResponseEntity.internalServerError().body(
                 ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.")
             );

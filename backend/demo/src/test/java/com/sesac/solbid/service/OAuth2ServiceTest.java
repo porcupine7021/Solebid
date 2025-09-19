@@ -115,9 +115,9 @@ class OAuth2ServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getAuthUrl()).isEqualTo(expectedAuthUrl);
-        assertThat(response.getState()).isEqualTo(expectedState);
-        assertThat(response.getProvider()).isEqualTo(provider);
+        assertThat(response.authUrl()).isEqualTo(expectedAuthUrl);
+        assertThat(response.state()).isEqualTo(expectedState);
+        assertThat(response.provider()).isEqualTo(provider);
 
         verify(stateService).generateState();
         verify(urlGenerator).generateAuthUrl(provider, expectedState);
@@ -139,9 +139,9 @@ class OAuth2ServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getAuthUrl()).isEqualTo(expectedAuthUrl);
-        assertThat(response.getState()).isEqualTo(expectedState);
-        assertThat(response.getProvider()).isEqualTo(provider);
+        assertThat(response.authUrl()).isEqualTo(expectedAuthUrl);
+        assertThat(response.state()).isEqualTo(expectedState);
+        assertThat(response.provider()).isEqualTo(provider);
     }
 
     @Test
@@ -404,11 +404,11 @@ class OAuth2ServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.getUserId()).isEqualTo(testUser.getUserId());
-        assertThat(response.getEmail()).isEqualTo(testUser.getEmail());
-        assertThat(response.getNickname()).isEqualTo(testUser.getNickname());
-        assertThat(response.getUserType()).isEqualTo(testUser.getUserType());
-        assertThat(response.getAccessToken()).isEqualTo(accessToken);
-        assertThat(response.getRefreshToken()).isEqualTo(refreshToken);
+        assertThat(response.userId()).isEqualTo(testUser.getUserId());
+        assertThat(response.email()).isEqualTo(testUser.getEmail());
+        assertThat(response.nickname()).isEqualTo(testUser.getNickname());
+        assertThat(response.userType()).isEqualTo(testUser.getUserType());
+        assertThat(response.accessToken()).isEqualTo(accessToken);
+        assertThat(response.refreshToken()).isEqualTo(refreshToken);
     }
 }

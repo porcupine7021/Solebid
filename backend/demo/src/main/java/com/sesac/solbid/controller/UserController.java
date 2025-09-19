@@ -67,16 +67,16 @@ public class UserController {
             // HttpOnly 쿠키로 토큰 설정 (CookieUtil 사용)
             cookieUtil.addTokenCookies(
                     response,
-                    responseDto.getAccessToken(), jwtUtil.getAccessTokenValiditySeconds(),
-                    responseDto.getRefreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
+                    responseDto.accessToken(), jwtUtil.getAccessTokenValiditySeconds(),
+                    responseDto.refreshToken(), jwtUtil.getRefreshTokenValiditySeconds()
             );
 
             // 응답에서는 토큰 제외하고 사용자 정보만 반환
             Map<String, Object> userData = new HashMap<>();
-            userData.put("userId", responseDto.getUserId());
-            userData.put("email", responseDto.getEmail());
-            userData.put("nickname", responseDto.getNickname());
-            userData.put("userType", responseDto.getUserType());
+            userData.put("userId", responseDto.userId());
+            userData.put("email", responseDto.email());
+            userData.put("nickname", responseDto.nickname());
+            userData.put("userType", responseDto.userType());
 
             return ResponseEntity.ok(ApiResponse.success(userData));
         } catch (ReactivationRequiredException e) {
@@ -117,9 +117,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<NicknameAvailabilityResponse>> isNicknameAvailable(
             @RequestParam("nickname") String nickname) {
         boolean available = userService.isNicknameAvailable(nickname);
-        return ResponseEntity.ok(ApiResponse.success(NicknameAvailabilityResponse.builder()
-                .available(available)
-                .build()));
+        return ResponseEntity.ok(ApiResponse.success(new NicknameAvailabilityResponse(available)));
     }
 
     // 현재 사용자 닉네임 설정 (accessToken 쿠키 필요)
@@ -139,7 +137,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
         }
-        User updated = userService.updateNicknameForEmail(email, body.getNickname());
+        User updated = userService.updateNicknameForEmail(email, body.nickname());
 
         Map<String, Object> data = new HashMap<>();
         data.put("userId", updated.getUserId());
@@ -171,6 +169,7 @@ public class UserController {
             data.put("email", user.getEmail());
             data.put("nickname", user.getNickname());
             data.put("userType", user.getUserType() != null ? user.getUserType().name() : null);
+            data.put("temperature", user.getTemperature());
             // 연결된 소셜 제공자 정보 포함 (있을 경우)
             socialLoginRepository.findByUser(user).ifPresent(sl -> data.put("socialProvider", sl.getProvider().name()));
             return ResponseEntity.ok(ApiResponse.success(data));
@@ -272,6 +271,7 @@ public class UserController {
             data.put("email", user.getEmail());
             data.put("nickname", user.getNickname());
             data.put("userType", user.getUserType() != null ? user.getUserType().name() : null);
+            data.put("temperature", user.getTemperature());
             return ResponseEntity.ok(ApiResponse.success(data, "계정이 재활성화되었습니다."));
         } catch (Exception e) {
             log.error("계정 재활성화 처리 중 예외", e);

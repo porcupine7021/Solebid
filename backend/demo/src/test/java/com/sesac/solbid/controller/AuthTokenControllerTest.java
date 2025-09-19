@@ -1,7 +1,6 @@
 package com.sesac.solbid.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sesac.solbid.config.WebConfig;
 import com.sesac.solbid.exception.GlobalExceptionHandler;
 import com.sesac.solbid.security.SecurityConfig;
 import com.sesac.solbid.service.user.UserService;
@@ -27,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = AuthTokenController.class)
 @TestPropertySource(properties = "spring.main.web-application-type=servlet")
-@Import({WebConfig.class, GlobalExceptionHandler.class, SecurityConfig.class, CookieUtil.class})
+@Import({GlobalExceptionHandler.class, SecurityConfig.class, CookieUtil.class})
 @DisplayName("AuthTokenController 리프레시 토큰 갱신 테스트")
 class AuthTokenControllerTest {
 

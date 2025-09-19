@@ -1,3 +1,5 @@
+
+/*
 import type {
     FetchPaymentsParams,
     PaymentsPageDto,
@@ -52,12 +54,28 @@ function mapServerPayment(p: ServerPayment): Payment {
     };
 }
 
+export async function finalizePortoneCharge(payload: {
+    impUid: string;
+    merchantUid: string;
+    amount: number;
+}) {
+    const res = await fetch('/api/payments/portone/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+    });
+    if (!res.ok) {
+        const msg = await res.text().catch(() => '');
+        throw new Error(msg || '결제 검증/적립에 실패했습니다.');
+    }
+    return res.json(); // { addedPoint, currentPoint, ... }
+}
+
 export async function fetchPayments(params: FetchPaymentsParams) {
     const search = new URLSearchParams();
 
-    search.set('userId', String(params.userId));
 
-    // 선택
     if (params.page != null) search.set('page', String(params.page)); // 0-based
     if (params.size != null) search.set('size', String(params.size));
     if (params.status && params.status !== 'ALL') search.set('status', params.status);
@@ -68,7 +86,7 @@ export async function fetchPayments(params: FetchPaymentsParams) {
     const res = await fetch(`${BASE_URL}/api/payments/records?${search.toString()}`, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        credentials: 'include', // 후에 Authorization 헤더 추가
+        credentials: 'include',
     });
 
     if (!res.ok) {
@@ -88,4 +106,22 @@ export async function fetchPayments(params: FetchPaymentsParams) {
         first: json.first,
         last: json.last,
     };
+}
+*/
+
+// services/paymentService.ts
+import { apiFetch } from '../../../utils/apiFetch';
+import type { PaymentsPageDto, FetchPaymentsParams } from '../types/payment';
+
+export async function fetchPayments(params: FetchPaymentsParams) {
+    const qs = new URLSearchParams();
+
+    if (params.page != null) qs.set('page', String(params.page));
+    if (params.size != null) qs.set('size', String(params.size));
+    if (params.status && params.status !== 'ALL') qs.set('status', params.status);
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    if (params.sort) qs.set('sort', params.sort);
+
+    return apiFetch<PaymentsPageDto>(`/api/payments/records?${qs.toString()}`);
 }

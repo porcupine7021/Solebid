@@ -49,9 +49,14 @@ public class SecurityConfig {
                                 "/api/auth/oauth2/*/callback",
                                 "/api/auth/logout",
                                 "/api/auth/refresh",
-                                "/api/auth/status",
-                                "/api/auth/password/forgot",
-                                "/api/auth/password/reset"
+                                "/api/auth/status"
+                        ).permitAll()
+                        // 비밀번호 재설정 OTP 관련 API는 인증 없이 접근 허용
+                        .requestMatchers(
+                                "/api/auth/password/request-reset",
+                                "/api/auth/password/verify-otp",
+                                "/api/auth/password/verify-and-reset",
+                                "/api/auth/password/resend-otp"
                         ).permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -66,11 +71,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 오리진 설정 (프론트엔드 주소)
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        // 허용할 오리진 설정
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*", 
+                "http://127.0.0.1:*"
+        ));
         
-        // 허용할 HTTP 메서드
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        // 허용할 HTTP 메서드 설정
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+        ));
         
         // 허용할 헤더
         configuration.setAllowedHeaders(Arrays.asList("*"));

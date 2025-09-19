@@ -4,7 +4,7 @@ import com.sesac.solbid.dto.upload.request.PresignRequest;
 import com.sesac.solbid.dto.upload.response.PresignResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
-import com.sesac.solbid.service.UploadService;
+import com.sesac.solbid.upload.UploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,11 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sesac.solbid.dto.upload.request.DownloadUrlRequest;
-import com.sesac.solbid.dto.upload.request.PresignRequest;
-import com.sesac.solbid.dto.upload.response.PresignResponse;
-import com.sesac.solbid.service.UploadService;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +25,13 @@ public class UploadController {
 
     private final UploadService uploadService;
 
-    /*
+    /**
      * 파일 업로드용 Presigned URL 발급
-     * POST /presign
+     * POST /api/uploads/presign
+     *
+     * @param req 파일 이름 및 Content-Type을 담은 요청 DTO
+     * @return key, putUrl, publicUrl을 담은 {@link PresignResponse}
+     *
      * URL 생성 후 저장
      * 서버 { key, putUrl, publicUrl } 응답
      * 업로드 URL만 발급

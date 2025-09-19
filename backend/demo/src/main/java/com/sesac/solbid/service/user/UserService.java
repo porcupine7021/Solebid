@@ -41,13 +41,13 @@ public class UserService {
 
     @Transactional
     public User signup(SignupRequest requestDto) {
-        if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(requestDto.email()).isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
-        if (userRepository.findByNickname(requestDto.getNickname()).isPresent()) {
+        if (userRepository.findByNickname(requestDto.nickname()).isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
-        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+        String encodedPassword = passwordEncoder.encode(requestDto.password());
         User user = requestDto.toEntity(encodedPassword);
         User savedUser = userRepository.save(user);
         
@@ -59,10 +59,10 @@ public class UserService {
 
     @Transactional
     public LoginResponse login(LoginRequest requestDto) {
-        User user = userRepository.findByEmail(requestDto.getEmail())
+        User user = userRepository.findByEmail(requestDto.email())
                 .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
 
-        if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(requestDto.password(), user.getPassword())) {
             throw new CustomException(ErrorCode.LOGIN_FAILED);
         }
 

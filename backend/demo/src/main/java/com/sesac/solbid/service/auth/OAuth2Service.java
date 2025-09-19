@@ -76,7 +76,7 @@ public class OAuth2Service {
         stateService.consumeState(state);
         try {
             LoginResponse response = login(providerName, authCode);
-            log.info("OAuth2 콜백 처리 완료: provider={}, userId={}", providerName, response.getUserId());
+            log.info("OAuth2 콜백 처리 완료: provider={}, userId={}", providerName, response.userId());
             return response;
         } catch (CustomException e) {
             throw e;
