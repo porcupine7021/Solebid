@@ -1,7 +1,6 @@
-import type { ProfileStatProps } from "../types/ProfileStatProps";
-import { statsData } from "./mockData";
+import { statsData, type LegacyProfileStatProps } from "./mockData";
 
-const StatCard = ({ label, value, color }: ProfileStatProps) => (
+const StatCard = ({ label, value, color }: LegacyProfileStatProps) => (
     <div className="bg-white rounded-lg shadow-sm p-6 text-center">
         <div className={`text-2xl font-bold ${color} mb-1`}>{value}</div>
         <div className="text-gray-600 text-sm">{label}</div>
