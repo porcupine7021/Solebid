@@ -1,9 +1,16 @@
 import type { ProfileTransactionProps } from "../types/ProfileTransactionProps";
 
-export const menuData = [
+export interface MenuDataItem {
+    icon: string;
+    text: string;
+    href: string;
+    action?: string;
+}
+
+export const menuData: MenuDataItem[] = [
     { icon: "fas fa-shopping-cart", text: "주문/배송 조회", href: "/order" },
     { icon: 'fas fa-receipt', text: '결제내역 조회', href: '/points/records' },
-    { icon: "fas fa-cog", text: "설정", href: "/setting" },
+    { icon: "fas fa-user-edit", text: "프로필 편집", href: "#", action: "profile-edit" },
 ];
 
 export const transactionData: ProfileTransactionProps[] = [
