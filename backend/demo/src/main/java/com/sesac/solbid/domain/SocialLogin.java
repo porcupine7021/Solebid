@@ -10,6 +10,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+/**
+ * 소셜 로그인 정보 엔티티 클래스
+ * <p>
+ * 사용자의 소셜 로그인 연동 정보를 관리하는 엔티티입니다.
+ * Google, Kakao 등의 OAuth2 제공자와의 연동 정보를 저장합니다.
+ * </p>
+ */
 @Entity
 @Getter
 @NoArgsConstructor
@@ -43,6 +50,13 @@ public class SocialLogin {
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * 소셜 로그인 엔티티 생성자
+     * 
+     * @param user 연동할 사용자 엔티티
+     * @param provider 소셜 로그인 제공자 (GOOGLE, KAKAO 등)
+     * @param providerId 제공자에서 발급한 사용자 고유 ID
+     */
     @Builder
     public SocialLogin(User user, ProviderType provider, String providerId) {
         this.user = user;
@@ -50,6 +64,12 @@ public class SocialLogin {
         this.providerId = providerId;
     }
 
+    /**
+     * 소셜 로그인 제공자의 토큰 정보를 업데이트합니다.
+     * 
+     * @param accessToken 제공자 액세스 토큰
+     * @param refreshToken 제공자 리프레시 토큰
+     */
     public void updateProviderTokens(String accessToken, String refreshToken) {
         this.providerAccessToken = accessToken;
         this.providerRefreshToken = refreshToken;
