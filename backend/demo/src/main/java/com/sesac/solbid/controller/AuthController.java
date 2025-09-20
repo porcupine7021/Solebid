@@ -33,7 +33,10 @@ import com.sesac.solbid.dto.auth.request.ResendOtpRequest;
 
 /**
  * 인증 컨트롤러
- * 소셜로그인 URL 생성 및 콜백 처리를 담당
+ * <p>
+ * OAuth2 소셜 로그인, 비밀번호 재설정, 로그아웃 등 인증 관련 기능을 제공하는 컨트롤러입니다.
+ * Google, Kakao 등의 소셜 로그인 URL 생성 및 콜백 처리를 담당합니다.
+ * </p>
  */
 @Slf4j
 @RestController
@@ -48,7 +51,12 @@ public class AuthController {
 
     /**
      * 로그아웃 처리
-     * POST /api/auth/logout
+     * <p>
+     * 사용자의 로그아웃 요청을 처리하고 JWT 토큰 쿠키를 삭제합니다.
+     * </p>
+     * 
+     * @param response HTTP 응답 (쿠키 삭제를 위해 사용)
+     * @return 로그아웃 처리 결과
      */
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Object>> logout(HttpServletResponse response) {
@@ -75,10 +83,14 @@ public class AuthController {
 
     /**
      * OAuth2 인증 URL 생성
-     * GET /api/auth/oauth2/{provider}/url
+     * <p>
+     * 지정된 소셜 로그인 제공자의 OAuth2 인증 URL을 생성합니다.
+     * 클라이언트는 이 URL로 사용자를 리다이렉트하여 소셜 로그인을 진행할 수 있습니다.
+     * </p>
      * 
      * @param provider 소셜 플랫폼 이름 (google, kakao)
-     * @return 인증 URL과 state 정보
+     * @param request HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return OAuth2 인증 URL과 state 정보를 포함한 응답
      */
     @GetMapping("/oauth2/{provider}/url")
     public ResponseEntity<ApiResponse<AuthUrlResponse>> generateAuthUrl(
@@ -118,11 +130,16 @@ public class AuthController {
 
     /**
      * OAuth2 콜백 처리
-     * POST /api/auth/oauth2/{provider}/callback
+     * <p>
+     * OAuth2 제공자로부터 받은 인증 코드를 처리하여 사용자 로그인을 완료합니다.
+     * 성공 시 JWT 토큰을 HttpOnly 쿠키로 설정하고 사용자 정보를 반환합니다.
+     * </p>
      * 
      * @param provider 소셜 플랫폼 이름 (google, kakao)
-     * @param request 콜백 요청 (code, state)
-     * @return 로그인 응답 (JWT 토큰 포함)
+     * @param request 콜백 요청 (인증 코드와 state 포함)
+     * @param httpRequest HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @param httpResponse HTTP 응답 (JWT 토큰 쿠키 설정용)
+     * @return 로그인 성공 시 사용자 정보, 실패 시 에러 정보
      */
     @PostMapping("/oauth2/{provider}/callback")
     public ResponseEntity<ApiResponse<Object>> handleCallback(
@@ -201,7 +218,13 @@ public class AuthController {
 
     /**
      * 비밀번호 재설정 OTP 요청
-     * POST /api/auth/password/request-reset
+     * <p>
+     * 사용자의 이메일로 비밀번호 재설정용 OTP 인증번호를 발송합니다.
+     * </p>
+     * 
+     * @param request 비밀번호 재설정 요청 (이메일 포함)
+     * @param httpRequest HTTP 요청 (클라이언트 IP 로깅용)
+     * @return OTP 발송 결과
      */
     @PostMapping("/password/request-reset")
     public ResponseEntity<ApiResponse<Object>> requestPasswordReset(
@@ -232,7 +255,14 @@ public class AuthController {
 
     /**
      * 비밀번호 재설정 OTP 검증만 수행
-     * POST /api/auth/password/verify-otp
+     * <p>
+     * 이메일로 발송된 OTP 인증번호의 유효성만 검증합니다.
+     * 비밀번호 변경은 수행하지 않습니다.
+     * </p>
+     * 
+     * @param request OTP 검증 요청 (이메일과 OTP 포함)
+     * @param httpRequest HTTP 요청 (클라이언트 IP 로깅용)
+     * @return OTP 검증 결과
      */
     @PostMapping("/password/verify-otp")
     public ResponseEntity<ApiResponse<Object>> verifyPasswordResetOtp(
@@ -263,7 +293,13 @@ public class AuthController {
 
     /**
      * 비밀번호 재설정 OTP 검증 및 비밀번호 변경
-     * POST /api/auth/password/verify-and-reset
+     * <p>
+     * OTP 인증번호를 검증하고 성공 시 새로운 비밀번호로 변경합니다.
+     * </p>
+     * 
+     * @param request OTP 검증 및 비밀번호 변경 요청 (이메일, OTP, 새 비밀번호 포함)
+     * @param httpRequest HTTP 요청 (클라이언트 IP 로깅용)
+     * @return 비밀번호 재설정 결과
      */
     @PostMapping("/password/verify-and-reset")
     public ResponseEntity<ApiResponse<Object>> verifyOtpAndResetPassword(
@@ -294,7 +330,13 @@ public class AuthController {
 
     /**
      * 비밀번호 재설정 OTP 재전송
-     * POST /api/auth/password/resend-otp
+     * <p>
+     * 비밀번호 재설정용 OTP 인증번호를 다시 발송합니다.
+     * </p>
+     * 
+     * @param request OTP 재전송 요청 (이메일 포함)
+     * @param httpRequest HTTP 요청 (클라이언트 IP 로깅용)
+     * @return OTP 재전송 결과
      */
     @PostMapping("/password/resend-otp")
     public ResponseEntity<ApiResponse<Object>> resendPasswordResetOtp(
@@ -327,6 +369,12 @@ public class AuthController {
 
     /**
      * 클라이언트 IP 주소 추출 (프록시 고려)
+     * <p>
+     * X-Forwarded-For, X-Real-IP 헤더를 확인하여 실제 클라이언트 IP를 추출합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청
+     * @return 클라이언트 IP 주소
      */
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -344,6 +392,12 @@ public class AuthController {
 
     /**
      * User-Agent 마스킹 처리 (보안)
+     * <p>
+     * 로그에 기록되는 User-Agent 정보를 마스킹하여 개인정보를 보호합니다.
+     * </p>
+     * 
+     * @param userAgent 원본 User-Agent 문자열
+     * @return 마스킹된 User-Agent 문자열
      */
     private String maskUserAgent(String userAgent) {
         if (userAgent == null || userAgent.length() < 20) {
@@ -354,6 +408,12 @@ public class AuthController {
 
     /**
      * State 값 마스킹 처리 (보안)
+     * <p>
+     * OAuth2 state 파라미터를 마스킹하여 로그에 안전하게 기록합니다.
+     * </p>
+     * 
+     * @param state 원본 state 값
+     * @return 마스킹된 state 값
      */
     private String maskState(String state) {
         if (state == null || state.length() < 8) {
@@ -365,6 +425,12 @@ public class AuthController {
 
     /**
      * 이메일 마스킹 처리 (보안)
+     * <p>
+     * 이메일 주소를 마스킹하여 로그에 안전하게 기록합니다.
+     * </p>
+     * 
+     * @param email 원본 이메일 주소
+     * @return 마스킹된 이메일 주소
      */
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) {

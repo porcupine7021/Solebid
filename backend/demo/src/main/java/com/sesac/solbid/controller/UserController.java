@@ -30,6 +30,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 사용자 관리 컨트롤러
+ * <p>
+ * 사용자 회원가입, 로그인, 프로필 관리, 회원 탈퇴 등 사용자 관련 기능을 제공하는 컨트롤러입니다.
+ * JWT 토큰 기반 인증을 사용하며, 토큰은 HttpOnly 쿠키로 관리됩니다.
+ * </p>
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -42,7 +49,15 @@ public class UserController {
     private final SocialLoginRepository socialLoginRepository;
     private final CookieUtil cookieUtil;
 
-    // 회원가입
+    /**
+     * 회원가입 처리
+     * <p>
+     * 새로운 사용자의 회원가입을 처리하고 이메일 인증 메일을 발송합니다.
+     * </p>
+     * 
+     * @param requestDto 회원가입 요청 정보 (이메일, 비밀번호, 닉네임, 이름, 전화번호)
+     * @return 회원가입 결과 및 사용자 정보
+     */
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest requestDto) {
         User user = userService.signup(requestDto);
@@ -56,7 +71,17 @@ public class UserController {
                 .body(ApiResponse.success(responseDto, message));
     }
 
-    // 로그인
+    /**
+     * 사용자 로그인 처리
+     * <p>
+     * 이메일과 비밀번호를 통한 사용자 로그인을 처리합니다.
+     * 성공 시 JWT 토큰을 HttpOnly 쿠키로 설정합니다.
+     * </p>
+     * 
+     * @param requestDto 로그인 요청 정보 (이메일, 비밀번호)
+     * @param response HTTP 응답 (JWT 토큰 쿠키 설정용)
+     * @return 로그인 결과 및 사용자 정보
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(
             @Valid @RequestBody LoginRequest requestDto,
@@ -99,7 +124,15 @@ public class UserController {
         }
     }
 
-    // 이메일 중복 확인
+    /**
+     * 이메일 중복 확인
+     * <p>
+     * 회원가입 시 입력한 이메일 주소의 사용 가능 여부를 확인합니다.
+     * </p>
+     * 
+     * @param email 확인할 이메일 주소
+     * @return 이메일 사용 가능 여부
+     */
     @GetMapping("/email/available")
     public ResponseEntity<ApiResponse<Map<String, Object>>> isEmailAvailable(
             @RequestParam("email") String email) {
@@ -112,7 +145,15 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(data, message));
     }
 
-    // 닉네임 가용성 확인
+    /**
+     * 닉네임 사용 가능 여부 확인
+     * <p>
+     * 입력한 닉네임의 중복 여부를 확인합니다.
+     * </p>
+     * 
+     * @param nickname 확인할 닉네임
+     * @return 닉네임 사용 가능 여부
+     */
     @GetMapping("/nickname/available")
     public ResponseEntity<ApiResponse<NicknameAvailabilityResponse>> isNicknameAvailable(
             @RequestParam("nickname") String nickname) {
@@ -120,7 +161,16 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(new NicknameAvailabilityResponse(available)));
     }
 
-    // 현재 사용자 닉네임 설정 (accessToken 쿠키 필요)
+    /**
+     * 현재 사용자 닉네임 변경
+     * <p>
+     * 로그인한 사용자의 닉네임을 변경합니다. JWT 토큰 인증이 필요합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 닉네임 변경 요청 정보
+     * @return 닉네임 변경 결과 및 업데이트된 사용자 정보
+     */
     @PostMapping("/nickname")
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateNickname(
             HttpServletRequest request,
@@ -147,7 +197,15 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(data, "닉네임이 설정되었습니다."));
     }
 
-    // 현재 사용자 조회 (accessToken 쿠키 필요)
+    /**
+     * 현재 로그인한 사용자 정보 조회
+     * <p>
+     * JWT 토큰을 통해 현재 로그인한 사용자의 정보를 조회합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @return 현재 사용자 정보
+     */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Map<String, Object>>> me(HttpServletRequest request) {
         Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
@@ -180,7 +238,17 @@ public class UserController {
         }
     }
 
-    // 회원 탈퇴 (accessToken 쿠키 필요)
+    /**
+     * 회원 탈퇴 처리
+     * <p>
+     * 현재 로그인한 사용자의 회원 탈퇴를 처리합니다.
+     * 연결된 소셜 계정이 있는 경우 연결 해제를 시도하고, JWT 토큰 쿠키를 삭제합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param response HTTP 응답 (토큰 쿠키 삭제용)
+     * @return 회원 탈퇴 처리 결과
+     */
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<Map<String, Object>>> withdraw(HttpServletRequest request, HttpServletResponse response) {
         Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
@@ -213,7 +281,16 @@ public class UserController {
         }
     }
 
-    // 소셜 연결 해제 (accessToken 쿠키 필요)
+    /**
+     * 소셜 계정 연결 해제
+     * <p>
+     * 현재 사용자와 연결된 특정 소셜 계정의 연결을 해제합니다.
+     * </p>
+     * 
+     * @param provider 연결 해제할 소셜 제공자 (google, kakao 등)
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @return 소셜 연결 해제 결과
+     */
     @DeleteMapping("/me/social/{provider}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> unlinkSocial(
             @PathVariable String provider,
@@ -246,7 +323,17 @@ public class UserController {
         }
     }
 
-    // 계정 재활성화 (토큰 기반) + 즉시 로그인 처리
+    /**
+     * 탈퇴 계정 재활성화
+     * <p>
+     * 탈퇴 처리된 계정을 재활성화하고 즉시 로그인 처리합니다.
+     * 재활성화 토큰을 통해 인증을 수행합니다.
+     * </p>
+     * 
+     * @param body 재활성화 요청 (재활성화 토큰 포함)
+     * @param response HTTP 응답 (JWT 토큰 쿠키 설정용)
+     * @return 재활성화 결과 및 사용자 정보
+     */
     @PostMapping("/reactivate")
     public ResponseEntity<ApiResponse<Map<String, Object>>> reactivate(@RequestBody Map<String, String> body,
                                                                        HttpServletResponse response) {
@@ -281,6 +368,13 @@ public class UserController {
         }
     }
 
+    /**
+     * HTTP 요청에서 특정 이름의 쿠키 값을 추출합니다.
+     * 
+     * @param request HTTP 요청
+     * @param name 쿠키 이름
+     * @return 쿠키 값 (Optional)
+     */
     private Optional<String> getCookieValue(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return Optional.empty();

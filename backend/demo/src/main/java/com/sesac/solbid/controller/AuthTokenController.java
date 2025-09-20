@@ -19,6 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Date;
 
+/**
+ * JWT 토큰 관리 컨트롤러
+ * <p>
+ * JWT 토큰의 갱신, 상태 확인 등 토큰 관련 기능을 제공하는 컨트롤러입니다.
+ * 리프레시 토큰을 통한 액세스 토큰 재발급과 토큰 상태 조회를 담당합니다.
+ * </p>
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -31,11 +38,14 @@ public class AuthTokenController {
 
     /**
      * 리프레시 토큰으로 액세스 토큰 재발급
-     * POST /api/auth/refresh
+     * <p>
+     * 만료된 액세스 토큰을 리프레시 토큰을 사용하여 재발급합니다.
+     * 토큰 회전(Token Rotation) 방식을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 모두 발급합니다.
+     * </p>
      *
-     * @param request  HTTP 요청 (쿠키에 refreshToken 포함)
+     * @param request HTTP 요청 (쿠키에 refreshToken 포함)
      * @param response HTTP 응답 (새 토큰 쿠키 설정)
-     * @return 액세스 토큰 재발급 결과
+     * @return 액세스 토큰 재발급 결과 및 토큰 만료 시간 정보
      */
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Map<String, Object>>> refreshToken(
@@ -103,9 +113,14 @@ public class AuthTokenController {
     }
 
     /**
-     * 액세스 토큰 상태 조회 (만료까지 남은 시간 확인용)
-     * GET /api/auth/status
-     * 프론트엔드 폴링/타이머가 만료 전 선제 갱신 결정을 내릴 수 있게 합니다.
+     * 액세스 토큰 상태 조회
+     * <p>
+     * 현재 액세스 토큰의 유효성과 만료까지 남은 시간을 확인합니다.
+     * 프론트엔드에서 토큰 만료 전 선제적 갱신을 위해 사용됩니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @return 토큰 상태 정보 (인증 여부, 만료 시간, 리프레시 토큰 보유 여부)
      */
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Map<String, Object>>> tokenStatus(HttpServletRequest request) {
@@ -145,6 +160,12 @@ public class AuthTokenController {
         }
     }
 
+    /**
+     * HTTP 요청에서 리프레시 토큰 쿠키를 추출합니다.
+     * 
+     * @param request HTTP 요청
+     * @return 리프레시 토큰 값 (없으면 null)
+     */
     private String extractRefreshTokenCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return null;
@@ -154,6 +175,13 @@ public class AuthTokenController {
         return null;
     }
 
+    /**
+     * HTTP 요청에서 특정 이름의 쿠키 값을 추출합니다.
+     * 
+     * @param request HTTP 요청
+     * @param name 쿠키 이름
+     * @return 쿠키 값 (없으면 null)
+     */
     private String extractCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return null;

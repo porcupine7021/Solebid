@@ -18,7 +18,10 @@ import java.util.Collections;
 
 /**
  * 이메일 인증 컨트롤러
- * 이메일 인증 및 재전송 요청을 처리합니다.
+ * <p>
+ * 회원가입 시 이메일 인증, 인증번호 검증, 인증 메일 재전송 등 
+ * 이메일 인증 관련 기능을 제공하는 컨트롤러입니다.
+ * </p>
  */
 @Slf4j
 @RestController
@@ -29,12 +32,14 @@ public class EmailVerificationController {
     private final EmailVerificationService emailVerificationService;
 
     /**
-     * 이메일 인증 처리
-     * GET /api/auth/verify-email?token={token}
+     * 이메일 인증 처리 (토큰 방식)
+     * <p>
+     * 이메일로 발송된 인증 링크의 토큰을 통해 이메일 인증을 완료합니다.
+     * </p>
      * 
-     * @param token 인증 토큰
-     * @param request HTTP 요청 (로깅용)
-     * @return 인증 결과
+     * @param token 이메일 인증 토큰
+     * @param request HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return 이메일 인증 결과
      */
     @GetMapping("/verify-email")
     public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyEmail(
@@ -83,12 +88,14 @@ public class EmailVerificationController {
     }
 
     /**
-     * 이메일 인증번호 검증 (새로운 방식)
-     * POST /api/auth/verify-code
+     * 이메일 인증번호 검증 (코드 방식)
+     * <p>
+     * 이메일로 발송된 6자리 인증번호를 통해 이메일 인증을 완료합니다.
+     * </p>
      * 
      * @param request 인증번호 검증 요청 (이메일과 인증번호 포함)
-     * @param httpRequest HTTP 요청 (로깅용)
-     * @return 인증 결과
+     * @param httpRequest HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return 이메일 인증 결과
      */
     @PostMapping("/verify-code")
     public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyCode(
@@ -138,11 +145,14 @@ public class EmailVerificationController {
 
     /**
      * 회원가입 전 이메일 인증번호 검증
-     * POST /api/auth/verify-signup-code
+     * <p>
+     * 회원가입 프로세스에서 이메일 인증번호를 검증합니다.
+     * 일반 이메일 인증과 구분되는 별도의 검증 로직을 사용합니다.
+     * </p>
      * 
      * @param request 인증번호 검증 요청 (이메일과 인증번호 포함)
-     * @param httpRequest HTTP 요청 (로깅용)
-     * @return 인증 결과
+     * @param httpRequest HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return 이메일 인증 결과
      */
     @PostMapping("/verify-signup-code")
     public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifySignupCode(
@@ -192,11 +202,13 @@ public class EmailVerificationController {
 
     /**
      * 회원가입 전 이메일 인증번호 전송
-     * POST /api/auth/send-verification
+     * <p>
+     * 회원가입 프로세스에서 이메일 인증번호를 발송합니다.
+     * </p>
      * 
      * @param request 인증번호 전송 요청 (이메일 포함)
-     * @param httpRequest HTTP 요청 (로깅용)
-     * @return 전송 결과
+     * @param httpRequest HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return 인증번호 전송 결과
      */
     @PostMapping("/send-verification")
     public ResponseEntity<ApiResponse<Object>> sendVerification(
@@ -242,11 +254,13 @@ public class EmailVerificationController {
 
     /**
      * 인증 이메일 재전송
-     * POST /api/auth/resend-verification
+     * <p>
+     * 이미 가입된 사용자의 이메일 인증번호를 재전송합니다.
+     * </p>
      * 
      * @param request 재전송 요청 (이메일 포함)
-     * @param httpRequest HTTP 요청 (로깅용)
-     * @return 재전송 결과
+     * @param httpRequest HTTP 요청 (클라이언트 IP 및 User-Agent 로깅용)
+     * @return 인증번호 재전송 결과
      */
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<Object>> resendVerification(
@@ -292,6 +306,12 @@ public class EmailVerificationController {
 
     /**
      * 클라이언트 IP 주소 추출 (프록시 고려)
+     * <p>
+     * X-Forwarded-For, X-Real-IP 헤더를 확인하여 실제 클라이언트 IP를 추출합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청
+     * @return 클라이언트 IP 주소
      */
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -309,6 +329,12 @@ public class EmailVerificationController {
 
     /**
      * User-Agent 마스킹 처리 (보안)
+     * <p>
+     * 로그에 기록되는 User-Agent 정보를 마스킹하여 개인정보를 보호합니다.
+     * </p>
+     * 
+     * @param userAgent 원본 User-Agent 문자열
+     * @return 마스킹된 User-Agent 문자열
      */
     private String maskUserAgent(String userAgent) {
         if (userAgent == null || userAgent.length() < 20) {
@@ -319,6 +345,12 @@ public class EmailVerificationController {
 
     /**
      * 토큰 마스킹 처리 (보안)
+     * <p>
+     * 이메일 인증 토큰을 마스킹하여 로그에 안전하게 기록합니다.
+     * </p>
+     * 
+     * @param token 원본 토큰 값
+     * @return 마스킹된 토큰 값
      */
     private String maskToken(String token) {
         if (token == null || token.length() < 8) {
@@ -329,6 +361,12 @@ public class EmailVerificationController {
 
     /**
      * 이메일 마스킹 처리 (보안)
+     * <p>
+     * 이메일 주소를 마스킹하여 로그에 안전하게 기록합니다.
+     * </p>
+     * 
+     * @param email 원본 이메일 주소
+     * @return 마스킹된 이메일 주소
      */
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) {
@@ -348,6 +386,12 @@ public class EmailVerificationController {
 
     /**
      * 인증번호 마스킹 처리 (보안)
+     * <p>
+     * 6자리 인증번호를 마스킹하여 로그에 안전하게 기록합니다.
+     * </p>
+     * 
+     * @param code 원본 인증번호
+     * @return 마스킹된 인증번호
      */
     private String maskCode(String code) {
         if (code == null || code.length() != 6) {
