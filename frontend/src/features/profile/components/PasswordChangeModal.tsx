@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '../../user/hooks/useAuth';
 import { changePassword, validatePasswordStrength } from '../services/ProfileUpdateService';
 import type { PasswordChangeFormData } from '../types/ProfileUpdateTypes';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
@@ -16,6 +17,7 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
   onClose, 
   onSuccess 
 }) => {
+  const { logout } = useAuth();
   const [showPassword, setShowPassword] = useState({
     current: false,
     new: false,
@@ -82,13 +84,26 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
       const response = await changePassword(pendingFormData);
       
       if (response.success) {
-        alert('비밀번호가 성공적으로 변경되었습니다. 보안을 위해 다시 로그인해주세요.');
+        // 사용자에게 로그아웃 안내
+        alert('비밀번호가 성공적으로 변경되었습니다.\n보안을 위해 자동으로 로그아웃되며 로그인 페이지로 이동합니다.');
         onSuccess?.();
         onClose();
         
-        // 세션이 무효화되었으므로 페이지 새로고침 또는 로그아웃 처리
+        // 세션이 무효화되었으므로 로그아웃 처리 및 로그인 페이지로 리다이렉트
         if (response.data.sessionInvalidated) {
-          window.location.reload();
+          // 잠시 대기 후 로그아웃 처리 (사용자가 메시지를 읽을 시간 제공)
+          setTimeout(async () => {
+            try {
+              // 로그아웃 처리 (토큰 삭제 및 사용자 상태 초기화)
+              await logout();
+              // 로그인 페이지로 리다이렉트
+              window.location.href = '/login';
+            } catch (error) {
+              console.error('Logout error:', error);
+              // 로그아웃 실패 시에도 로그인 페이지로 이동
+              window.location.href = '/login';
+            }
+          }, 1500); // 1.5초 후 로그아웃
         }
       }
     } catch (error) {
