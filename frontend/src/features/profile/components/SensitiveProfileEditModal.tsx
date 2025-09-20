@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../user/hooks/useAuth';
-import { updateSensitiveProfile, validateEmail, validatePhone } from '../services/ProfileUpdateService';
+import { updateSensitiveProfile, validatePhone, formatPhoneNumber } from '../services/ProfileUpdateService';
 import type { SensitiveProfileFormData } from '../types/ProfileUpdateTypes';
 import SecurityConfirmDialog from './SecurityConfirmDialog';
+import EmailChangeModal from './EmailChangeModal';
 
 interface SensitiveProfileEditModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<SensitiveProfileFormData | null>(null);
+  const [showEmailChangeModal, setShowEmailChangeModal] = useState(false);
 
   const {
     register,
@@ -30,7 +32,6 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
   } = useForm<SensitiveProfileFormData>({
     defaultValues: {
       currentPassword: '',
-      email: '',
       phone: '',
     },
   });
@@ -52,6 +53,7 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
       setShowPassword(false);
       setShowConfirmDialog(false);
       setPendingFormData(null);
+      setShowEmailChangeModal(false);
     }
   }, [open, reset]);
 
@@ -151,10 +153,32 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
                   <div>
                     <h4 className="text-sm font-medium text-red-800">보안 인증 필요</h4>
                     <p className="text-sm text-red-700 mt-1">
-                      이메일과 전화번호는 민감한 정보로, 변경 시 현재 비밀번호 확인이 필요합니다.
+                      전화번호는 민감한 정보로, 변경 시 현재 비밀번호 확인이 필요합니다.
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* 이메일 변경 섹션 */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-800">이메일 변경</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      현재 이메일: {user?.email || '설정되지 않음'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailChangeModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    이메일 변경
+                  </button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  이메일 변경은 별도의 인증 과정을 거쳐 안전하게 처리됩니다.
+                </p>
               </div>
 
               {/* 현재 비밀번호 */}
@@ -196,33 +220,7 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
                 )}
               </div>
 
-              {/* 이메일 */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  이메일
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  {...register('email', {
-                    validate: (value) => {
-                      if (!value) return true; // 선택사항이므로 빈 값 허용
-                      const validation = validateEmail(value);
-                      return validation.isValid || validation.message;
-                    },
-                  })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-blue-500 text-sm ${
-                    errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  placeholder="새로운 이메일 주소를 입력해주세요"
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  현재 이메일: {user?.email || '설정되지 않음'}
-                </p>
-              </div>
+
 
               {/* 전화번호 */}
               <div>
@@ -305,6 +303,18 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
           setPendingFormData(null);
         }}
         isLoading={isSubmitting}
+      />
+
+      {/* 이메일 변경 모달 */}
+      <EmailChangeModal
+        open={showEmailChangeModal}
+        onClose={() => setShowEmailChangeModal(false)}
+        onSuccess={async () => {
+          setShowEmailChangeModal(false);
+          // 사용자 정보 새로고침 (이메일 변경 반영)
+          await refreshMe();
+          onSuccess?.();
+        }}
       />
     </>
   );

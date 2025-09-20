@@ -132,23 +132,23 @@ export const changePassword = async (data: PasswordChangeRequest): Promise<Passw
  */
 export const validatePasswordStrength = (password: string): { isValid: boolean; message: string } => {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
-  
+
   if (!password) {
     return { isValid: false, message: '비밀번호를 입력해주세요.' };
   }
-  
+
   if (password.length < 8) {
     return { isValid: false, message: '비밀번호는 최소 8자 이상이어야 합니다.' };
   }
-  
+
   if (password.length > 20) {
     return { isValid: false, message: '비밀번호는 최대 20자까지 가능합니다.' };
   }
-  
+
   if (!passwordRegex.test(password)) {
     return { isValid: false, message: '영문 대소문자, 숫자, 특수문자를 모두 포함해야 합니다.' };
   }
-  
+
   return { isValid: true, message: '사용 가능한 비밀번호입니다.' };
 };
 
@@ -159,15 +159,15 @@ export const validateNickname = (nickname: string): { isValid: boolean; message:
   if (!nickname) {
     return { isValid: false, message: '닉네임을 입력해주세요.' };
   }
-  
+
   if (nickname.length < 2) {
     return { isValid: false, message: '닉네임은 최소 2자 이상이어야 합니다.' };
   }
-  
+
   if (nickname.length > 50) {
     return { isValid: false, message: '닉네임은 최대 50자까지 가능합니다.' };
   }
-  
+
   return { isValid: true, message: '사용 가능한 닉네임입니다.' };
 };
 
@@ -178,15 +178,15 @@ export const validateName = (name: string): { isValid: boolean; message: string 
   if (!name) {
     return { isValid: false, message: '이름을 입력해주세요.' };
   }
-  
+
   if (name.length < 2) {
     return { isValid: false, message: '이름은 최소 2자 이상이어야 합니다.' };
   }
-  
+
   if (name.length > 50) {
     return { isValid: false, message: '이름은 최대 50자까지 가능합니다.' };
   }
-  
+
   return { isValid: true, message: '사용 가능한 이름입니다.' };
 };
 
@@ -275,8 +275,6 @@ export const extractPhoneNumbers = (phone: string): string => {
  * 다양한 한국 전화번호 형식을 지원
  */
 export const validatePhone = (phone: string): { isValid: boolean; message: string } => {
-  const phoneRegex = /^010-\d{4}-\d{4}$/;
-  
   if (!phone) {
     return { isValid: false, message: '전화번호를 입력해주세요.' };
   }
@@ -334,15 +332,15 @@ export const validatePhone = (phone: string): { isValid: boolean; message: strin
  */
 export const validateEmail = (email: string): { isValid: boolean; message: string } => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   if (!email) {
     return { isValid: false, message: '이메일을 입력해주세요.' };
   }
-  
+
   if (!emailRegex.test(email)) {
     return { isValid: false, message: '올바른 이메일 형식이 아닙니다.' };
   }
-  
+
   return { isValid: true, message: '사용 가능한 이메일입니다.' };
 };
 /**
@@ -351,15 +349,15 @@ export const validateEmail = (email: string): { isValid: boolean; message: strin
  */
 export const transformProfileFormData = (formData: any): ProfileUpdateRequest => {
   const result: ProfileUpdateRequest = {};
-  
+
   if (formData.nickname && formData.nickname.trim()) {
     result.nickname = formData.nickname.trim();
   }
-  
+
   if (formData.name && formData.name.trim()) {
     result.name = formData.name.trim();
   }
-  
+
   return result;
 };
 
@@ -370,14 +368,94 @@ export const transformSensitiveProfileFormData = (formData: any): SensitiveProfi
   const result: SensitiveProfileUpdateRequest = {
     currentPassword: formData.currentPassword,
   };
-  
+
   if (formData.email && formData.email.trim()) {
     result.email = formData.email.trim();
   }
-  
+
   if (formData.phone && formData.phone.trim()) {
     result.phone = formData.phone.trim();
   }
-  
+
   return result;
+};
+
+/**
+ * 이메일 변경 요청 API 함수 (1단계: 인증 코드 발송)
+ * 현재 비밀번호 확인 후 새로운 이메일로 인증 코드 발송
+ */
+export const requestEmailChange = async (currentPassword: string, newEmail: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await apiFetch<{ success: boolean; message: string; data: any }>('/api/users/email/change-request', {
+      method: 'POST',
+      json: {
+        currentPassword,
+        newEmail,
+      },
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || '이메일 변경 요청에 실패했습니다.');
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('HTTP 401')) {
+        throw new Error('현재 비밀번호가 올바르지 않습니다.');
+      } else if (error.message.includes('HTTP 409')) {
+        throw new Error('이미 사용 중인 이메일입니다.');
+      } else if (error.message.includes('HTTP 400')) {
+        if (error.message.includes('EMAIL_SAME_AS_CURRENT')) {
+          throw new Error('새로운 이메일이 현재 이메일과 동일합니다.');
+        }
+        throw new Error('입력한 정보가 올바르지 않습니다.');
+      } else if (error.message.includes('HTTP 500')) {
+        throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      throw error;
+    }
+    throw new Error('이메일 변경 요청 중 오류가 발생했습니다.');
+  }
+};
+
+/**
+ * 이메일 변경 완료 API 함수 (2단계: 인증 코드 검증 및 이메일 업데이트)
+ * 인증 코드를 검증하고 이메일을 변경
+ */
+export const confirmEmailChange = async (newEmail: string, verificationCode: string): Promise<ProfileUpdateApiResponse> => {
+  try {
+    const response = await apiFetch<ProfileUpdateApiResponse>('/api/users/email/change-confirm', {
+      method: 'POST',
+      json: {
+        newEmail,
+        verificationCode,
+      },
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || '이메일 변경에 실패했습니다.');
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('HTTP 400')) {
+        if (error.message.includes('EMAIL_VERIFICATION_TOKEN_INVALID')) {
+          throw new Error('인증 코드가 올바르지 않습니다.');
+        } else if (error.message.includes('EMAIL_VERIFICATION_TOKEN_EXPIRED')) {
+          throw new Error('인증 코드가 만료되었습니다. 다시 요청해주세요.');
+        }
+        throw new Error('입력한 정보가 올바르지 않습니다.');
+      } else if (error.message.includes('HTTP 409')) {
+        throw new Error('이미 사용 중인 이메일입니다.');
+      } else if (error.message.includes('HTTP 401')) {
+        throw new Error('로그인이 필요합니다.');
+      } else if (error.message.includes('HTTP 500')) {
+        throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
+      throw error;
+    }
+    throw new Error('이메일 변경 중 오류가 발생했습니다.');
+  }
 };

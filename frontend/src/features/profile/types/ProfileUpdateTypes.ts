@@ -41,7 +41,6 @@ export interface ProfileFormData {
 
 export interface SensitiveProfileFormData {
   currentPassword: string;
-  email: string;
   phone: string;
 }
 

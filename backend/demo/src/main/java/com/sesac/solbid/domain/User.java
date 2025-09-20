@@ -222,6 +222,21 @@ public class User extends BaseEntity implements UserDetails {
         this.emailVerifiedAt = LocalDateTime.now();
     }
 
+    /**
+     * 이메일 주소 변경
+     * 새로운 이메일 주소로 변경하고 인증 상태를 유지합니다.
+     * 
+     * @param newEmail 새로운 이메일 주소
+     */
+    public void updateEmail(String newEmail) {
+        if (newEmail != null && !newEmail.trim().isEmpty()) {
+            this.email = newEmail.trim();
+            // 이메일 변경 시에도 인증 상태는 유지 (이미 인증 과정을 거쳤으므로)
+            this.emailVerified = true;
+            this.emailVerifiedAt = LocalDateTime.now();
+        }
+    }
+
     // UserDetails Impl
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

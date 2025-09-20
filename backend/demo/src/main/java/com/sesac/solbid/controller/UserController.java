@@ -555,6 +555,148 @@ public class UserController {
     }
 
     /**
+     * 이메일 변경 요청 (1단계: 인증 코드 발송)
+     * <p>
+     * 새로운 이메일 주소로 인증 코드를 발송합니다.
+     * JWT 토큰 인증과 현재 비밀번호 확인이 필요합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 이메일 변경 요청 정보
+     * @return 인증 코드 발송 결과
+     */
+    @PostMapping("/email/change-request")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> requestEmailChange(
+            HttpServletRequest request,
+            @Valid @RequestBody Map<String, String> body) {
+        Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
+        if (accessTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다."));
+        }
+        
+        String email;
+        try {
+            String token = accessTokenOpt.get();
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+            }
+            email = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+        }
+        
+        String currentPassword = body.get("currentPassword");
+        String newEmail = body.get("newEmail");
+        
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "현재 비밀번호를 입력해주세요."));
+        }
+        
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "새로운 이메일을 입력해주세요."));
+        }
+        
+        try {
+            userService.requestEmailChange(email, currentPassword, newEmail);
+            
+            Map<String, Object> data = new HashMap<>();
+            data.put("newEmail", newEmail);
+            data.put("message", "새로운 이메일 주소로 인증 코드가 발송되었습니다.");
+            
+            return ResponseEntity.ok(ApiResponse.success(data, 
+                "인증 코드가 발송되었습니다. 새로운 이메일을 확인해주세요."));
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("이메일 변경 요청 처리 중 예외", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 이메일 변경 완료 (2단계: 인증 코드 검증 및 이메일 업데이트)
+     * <p>
+     * 인증 코드를 검증하고 이메일을 변경합니다.
+     * JWT 토큰 인증이 필요합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 이메일 변경 완료 요청 정보
+     * @return 이메일 변경 결과
+     */
+    @PostMapping("/email/change-confirm")
+    public ResponseEntity<ApiResponse<ProfileUpdateResponse>> confirmEmailChange(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @Valid @RequestBody Map<String, String> body) {
+        Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
+        if (accessTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다."));
+        }
+        
+        String email;
+        try {
+            String token = accessTokenOpt.get();
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+            }
+            email = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+        }
+        
+        String newEmail = body.get("newEmail");
+        String verificationCode = body.get("verificationCode");
+        
+        if (newEmail == null || newEmail.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "새로운 이메일을 입력해주세요."));
+        }
+        
+        if (verificationCode == null || verificationCode.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "인증 코드를 입력해주세요."));
+        }
+        
+        try {
+            User updatedUser = userService.confirmEmailChange(email, newEmail, verificationCode);
+            
+            // 이메일 변경 후 새로운 JWT 토큰 발급 (새 이메일로)
+            String newAccessToken = jwtUtil.generateToken(updatedUser.getEmail());
+            String newRefreshToken = jwtUtil.generateRefreshToken(updatedUser.getEmail());
+            
+            // 새로운 토큰으로 쿠키 업데이트
+            cookieUtil.addTokenCookies(
+                response,
+                newAccessToken, jwtUtil.getAccessTokenValiditySeconds(),
+                newRefreshToken, jwtUtil.getRefreshTokenValiditySeconds()
+            );
+            
+            ProfileUpdateResponse responseDto = ProfileUpdateResponse.from(updatedUser);
+            
+            return ResponseEntity.ok(ApiResponse.success(responseDto, 
+                "이메일이 성공적으로 변경되었습니다. 새로운 토큰이 발급되었습니다."));
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("이메일 변경 완료 처리 중 예외", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
      * HTTP 요청에서 특정 이름의 쿠키 값을 추출합니다.
      * 
      * @param request HTTP 요청
