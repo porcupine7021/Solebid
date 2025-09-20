@@ -1,5 +1,11 @@
-import { ProfileAccount, ProfileBid, ProfileMenu, ProfileStats, ProfileTransaction, ProfileUser } from "../components";
-import ProfilePoint from "../components/ProfilePoint";
+import { 
+    ProfileAccount, 
+    ProfileBid, 
+    ProfileMenu, 
+    ProfilePoint, 
+    ProfileStats, 
+    ProfileTransaction 
+} from "../components";
 
 const ProfilePage = () => {
     return (
@@ -8,7 +14,6 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-12 gap-8">
                     {/* Left Sidebar */}
                     <aside className="col-span-3">
-                        <ProfileUser />
                         <ProfileMenu />
                     </aside>
                     {/* Main Content */}
