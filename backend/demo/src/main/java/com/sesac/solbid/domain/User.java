@@ -18,6 +18,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 사용자 엔티티 클래스
+ * <p>
+ * 경매 플랫폼의 사용자 정보를 관리하는 엔티티입니다.
+ * Spring Security의 UserDetails 인터페이스를 구현하여 인증/인가 기능을 제공합니다.
+ * </p>
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -93,6 +100,15 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Payments> payments = new ArrayList<>();
 
+    /**
+     * 사용자 엔티티 생성자
+     * 
+     * @param email 사용자 이메일 주소
+     * @param password 암호화된 비밀번호
+     * @param nickname 사용자 닉네임
+     * @param name 사용자 실명
+     * @param phone 사용자 전화번호
+     */
     @Builder
     public User(String email, String password, String nickname, String name, String phone) {
         this.email = email;
@@ -108,19 +124,30 @@ public class User extends BaseEntity implements UserDetails {
         // withdrawnAt, emailVerifiedAt 기본값은 null
     }
 
-    // 닉네임 동기화용 업데이트 메서드
+    /**
+     * 사용자 닉네임을 업데이트합니다.
+     * 
+     * @param newNickname 새로운 닉네임 (null이 아니고 공백이 아니며 기존 닉네임과 다른 경우에만 업데이트)
+     */
     public void updateNickname(String newNickname) {
         if (newNickname != null && !newNickname.isBlank() && !newNickname.equals(this.nickname)) {
             this.nickname = newNickname;
         }
     }
 
-    // 비밀번호 변경 메서드
+    /**
+     * 사용자 비밀번호를 변경합니다.
+     * 
+     * @param encodedPassword 암호화된 새 비밀번호
+     */
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
 
-    // 회원 탈퇴(소프트 삭제): 상태 전환 + 일시 기록
+    /**
+     * 회원 탈퇴 처리 (소프트 삭제)
+     * 사용자 상태를 WITHDRAWN으로 변경하고 탈퇴 일시를 기록합니다.
+     */
     public void withdraw() {
         if (this.userStatus != UserStatus.WITHDRAWN) {
             this.userStatus = UserStatus.WITHDRAWN;
@@ -128,7 +155,10 @@ public class User extends BaseEntity implements UserDetails {
         }
     }
 
-    // 회원 재활성화: 상태/일시 원복
+    /**
+     * 회원 재활성화 처리
+     * 탈퇴된 사용자를 다시 활성 상태로 변경하고 탈퇴 일시를 초기화합니다.
+     */
     public void reactivate() {
         if (this.userStatus == UserStatus.WITHDRAWN) {
             this.userStatus = UserStatus.ACTIVE;
@@ -136,7 +166,10 @@ public class User extends BaseEntity implements UserDetails {
         }
     }
 
-    // 이메일 인증 처리
+    /**
+     * 이메일 인증 완료 처리
+     * 이메일 인증 상태를 true로 변경하고 인증 완료 일시를 기록합니다.
+     */
     public void verifyEmail() {
         this.emailVerified = true;
         this.emailVerifiedAt = LocalDateTime.now();

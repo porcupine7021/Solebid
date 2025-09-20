@@ -6,6 +6,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 사용자 회원가입 요청 DTO
+ * <p>
+ * 사용자의 회원가입 요청 시 필요한 정보를 담는 DTO입니다.
+ * 각 필드에 대한 유효성 검증을 포함합니다.
+ * </p>
+ * 
+ * @param email 사용자 이메일 주소 (필수, 이메일 형식 검증)
+ * @param password 사용자 비밀번호 (필수, 8~20자 영문 대소문자, 숫자, 특수문자 포함)
+ * @param nickname 사용자 닉네임 (필수, 2~10자)
+ * @param name 사용자 실명 (필수)
+ * @param phone 사용자 전화번호 (필수, 한국 휴대폰 번호 형식)
+ */
 public record SignupRequest(
     @NotBlank(message = "이메일은 필수 입력 값입니다.")
     @Email(message = "이메일 형식이 올바르지 않습니다.")
@@ -28,6 +41,12 @@ public record SignupRequest(
     @Pattern(regexp = "^01(?:0|1|[6-9])[0-9]{7,8}$", message = "전화번호 형식이 올바르지 않습니다.")
     String phone
 ) {
+    /**
+     * SignupRequest를 User 엔티티로 변환합니다.
+     * 
+     * @param encodedPassword 암호화된 비밀번호
+     * @return 생성된 User 엔티티
+     */
     public User toEntity(String encodedPassword) {
         return User.builder()
                 .email(this.email)
