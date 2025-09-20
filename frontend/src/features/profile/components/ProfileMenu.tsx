@@ -2,18 +2,28 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { menuData, type MenuDataItem } from "./mockData";
 import ProfileEditModal from "./ProfileEditModal";
+import SensitiveProfileEditModal from "./SensitiveProfileEditModal";
+import PasswordChangeModal from "./PasswordChangeModal";
 
 const ProfileMenu = () => {
     const [isProfileEditModalOpen, setIsProfileEditModalOpen] = useState(false);
+    const [isSensitiveEditModalOpen, setIsSensitiveEditModalOpen] = useState(false);
+    const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] = useState(false);
 
     const handleMenuClick = (link: MenuDataItem) => {
         if (link.action === "profile-edit") {
             setIsProfileEditModalOpen(true);
+        } else if (link.action === "sensitive-edit") {
+            setIsSensitiveEditModalOpen(true);
+        } else if (link.action === "password-change") {
+            setIsPasswordChangeModalOpen(true);
         }
     };
 
     const handleCloseModal = () => {
         setIsProfileEditModalOpen(false);
+        setIsSensitiveEditModalOpen(false);
+        setIsPasswordChangeModalOpen(false);
     };
 
     return (
@@ -24,7 +34,7 @@ const ProfileMenu = () => {
                 </h3>
                 <nav className="space-y-2">
                     {menuData.map((link, index) => {
-                        if (link.action === "profile-edit") {
+                        if (link.action && ["profile-edit", "sensitive-edit", "password-change"].includes(link.action)) {
                             return (
                                 <button
                                     key={index}
@@ -56,6 +66,22 @@ const ProfileMenu = () => {
                 onClose={handleCloseModal}
                 onSuccess={() => {
                     // 프로필 업데이트 성공 시 추가 작업이 필요하면 여기에 구현
+                }}
+            />
+
+            <SensitiveProfileEditModal
+                open={isSensitiveEditModalOpen}
+                onClose={handleCloseModal}
+                onSuccess={() => {
+                    // 민감한 정보 업데이트 성공 시 추가 작업이 필요하면 여기에 구현
+                }}
+            />
+
+            <PasswordChangeModal
+                open={isPasswordChangeModalOpen}
+                onClose={handleCloseModal}
+                onSuccess={() => {
+                    // 비밀번호 변경 성공 시 추가 작업이 필요하면 여기에 구현
                 }}
             />
         </>
