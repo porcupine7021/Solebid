@@ -191,7 +191,88 @@ export const validateName = (name: string): { isValid: boolean; message: string 
 };
 
 /**
+ * 전화번호 자동 포맷팅 함수
+ * 다양한 한국 전화번호 형식을 지원 (휴대폰, 지역번호, 특수번호)
+ */
+export const formatPhoneNumber = (value: string): string => {
+  // 숫자만 추출
+  const numbers = value.replace(/[^\d]/g, '');
+
+  // 최대 11자리로 제한
+  const truncated = numbers.slice(0, 11);
+
+  if (truncated.length <= 2) {
+    return truncated;
+  }
+
+  // 02 (서울 지역번호) - 2자리 지역번호
+  if (truncated.startsWith('02')) {
+    if (truncated.length <= 2) {
+      return truncated;
+    } else if (truncated.length <= 5) {
+      return `${truncated.slice(0, 2)}-${truncated.slice(2)}`;
+    } else if (truncated.length <= 9) {
+      return `${truncated.slice(0, 2)}-${truncated.slice(2, 5)}-${truncated.slice(5)}`;
+    } else {
+      return `${truncated.slice(0, 2)}-${truncated.slice(2, 6)}-${truncated.slice(6)}`;
+    }
+  }
+
+  // 010 (휴대폰) - 3자리 시작
+  if (truncated.startsWith('010')) {
+    if (truncated.length <= 3) {
+      return truncated;
+    } else if (truncated.length <= 7) {
+      return `${truncated.slice(0, 3)}-${truncated.slice(3)}`;
+    } else {
+      return `${truncated.slice(0, 3)}-${truncated.slice(3, 7)}-${truncated.slice(7)}`;
+    }
+  }
+
+  // 1588, 1577, 1544 등 특수번호 - 4자리 시작
+  if (truncated.match(/^(15\d\d|16\d\d|18\d\d)/)) {
+    if (truncated.length <= 4) {
+      return truncated;
+    } else {
+      return `${truncated.slice(0, 4)}-${truncated.slice(4)}`;
+    }
+  }
+
+  // 기타 지역번호 (031, 032, 033, 041, 042, 043, 051, 052, 053, 054, 055, 061, 062, 063, 064) - 3자리 시작
+  if (truncated.match(/^(0[3-6]\d)/)) {
+    if (truncated.length <= 3) {
+      return truncated;
+    } else if (truncated.length <= 6) {
+      return `${truncated.slice(0, 3)}-${truncated.slice(3)}`;
+    } else if (truncated.length <= 10) {
+      return `${truncated.slice(0, 3)}-${truncated.slice(3, 6)}-${truncated.slice(6)}`;
+    } else {
+      return `${truncated.slice(0, 3)}-${truncated.slice(3, 7)}-${truncated.slice(7)}`;
+    }
+  }
+
+  // 기본 처리 (3-3-4 또는 3-4-4 형식)
+  if (truncated.length <= 3) {
+    return truncated;
+  } else if (truncated.length <= 6) {
+    return `${truncated.slice(0, 3)}-${truncated.slice(3)}`;
+  } else if (truncated.length <= 10) {
+    return `${truncated.slice(0, 3)}-${truncated.slice(3, 6)}-${truncated.slice(6)}`;
+  } else {
+    return `${truncated.slice(0, 3)}-${truncated.slice(3, 7)}-${truncated.slice(7)}`;
+  }
+};
+
+/**
+ * 전화번호에서 숫자만 추출하는 함수
+ */
+export const extractPhoneNumbers = (phone: string): string => {
+  return phone.replace(/[^\d]/g, '');
+};
+
+/**
  * 전화번호 유효성 검증 함수
+ * 다양한 한국 전화번호 형식을 지원
  */
 export const validatePhone = (phone: string): { isValid: boolean; message: string } => {
   const phoneRegex = /^010-\d{4}-\d{4}$/;
@@ -199,12 +280,53 @@ export const validatePhone = (phone: string): { isValid: boolean; message: strin
   if (!phone) {
     return { isValid: false, message: '전화번호를 입력해주세요.' };
   }
-  
-  if (!phoneRegex.test(phone)) {
-    return { isValid: false, message: '전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)' };
+
+  // 숫자만 추출해서 검증
+  const numbers = extractPhoneNumbers(phone);
+
+  // 최소 길이 확인
+  if (numbers.length < 8) {
+    return { isValid: false, message: '전화번호가 너무 짧습니다.' };
   }
-  
-  return { isValid: true, message: '사용 가능한 전화번호입니다.' };
+
+  // 최대 길이 확인
+  if (numbers.length > 11) {
+    return { isValid: false, message: '전화번호가 너무 깁니다.' };
+  }
+
+  // 휴대폰 번호 (010-xxxx-xxxx)
+  if (numbers.startsWith('010')) {
+    if (numbers.length !== 11) {
+      return { isValid: false, message: '휴대폰 번호는 11자리여야 합니다. (예: 010-1234-5678)' };
+    }
+    return { isValid: true, message: '사용 가능한 휴대폰 번호입니다.' };
+  }
+
+  // 서울 지역번호 (02-xxx-xxxx 또는 02-xxxx-xxxx)
+  if (numbers.startsWith('02')) {
+    if (numbers.length < 9 || numbers.length > 10) {
+      return { isValid: false, message: '서울 지역번호는 9-10자리여야 합니다. (예: 02-1234-5678)' };
+    }
+    return { isValid: true, message: '사용 가능한 서울 지역번호입니다.' };
+  }
+
+  // 기타 지역번호 (031, 032, 033, 041, 042, 043, 051, 052, 053, 054, 055, 061, 062, 063, 064)
+  if (numbers.match(/^(0[3-6]\d)/)) {
+    if (numbers.length < 9 || numbers.length > 11) {
+      return { isValid: false, message: '지역번호는 9-11자리여야 합니다. (예: 031-123-4567)' };
+    }
+    return { isValid: true, message: '사용 가능한 지역번호입니다.' };
+  }
+
+  // 특수번호 (1588, 1577, 1544 등)
+  if (numbers.match(/^(15\d\d|16\d\d|18\d\d)/)) {
+    if (numbers.length < 8 || numbers.length > 9) {
+      return { isValid: false, message: '특수번호는 8-9자리여야 합니다. (예: 1588-1234)' };
+    }
+    return { isValid: true, message: '사용 가능한 특수번호입니다.' };
+  }
+
+  return { isValid: false, message: '올바른 전화번호 형식이 아닙니다.' };
 };
 
 /**

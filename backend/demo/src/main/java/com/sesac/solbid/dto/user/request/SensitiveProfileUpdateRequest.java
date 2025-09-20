@@ -22,7 +22,8 @@ public record SensitiveProfileUpdateRequest(
     @Email(message = "올바른 이메일 형식이 아닙니다")
     String email,
     
-    @Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "전화번호 형식이 올바르지 않습니다")
+    @Pattern(regexp = "^(010\\d{8}|02\\d{7,8}|0[3-6]\\d{8,9}|1[5-8]\\d{6})$", 
+             message = "올바른 전화번호 형식이 아닙니다 (하이픈 없이 숫자만 입력)")
     String phone
 ) {
     /**

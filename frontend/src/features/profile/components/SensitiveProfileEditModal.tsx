@@ -38,8 +38,9 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
   // 모달이 열릴 때 현재 사용자 정보로 폼 초기화
   useEffect(() => {
     if (open && user) {
-      setValue('email', user.email || '');
-      setValue('phone', user.phone || '');
+      // 데이터베이스에서 하이픈 없이 저장된 전화번호를 포맷팅해서 표시
+      const formattedPhone = user.phone ? formatPhoneNumber(user.phone) : '';
+      setValue('phone', formattedPhone);
       setValue('currentPassword', '');
     }
   }, [open, user, setValue]);
@@ -55,10 +56,10 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
   }, [open, reset]);
 
   const onSubmit = async (data: SensitiveProfileFormData) => {
-    // 변경사항이 있는지 확인
-    const hasChanges = 
-      (data.email && data.email !== user?.email) ||
-      (data.phone && data.phone !== user?.phone);
+    // 변경사항이 있는지 확인 (전화번호만) - 숫자만 비교
+    const currentPhoneNumbers = user?.phone ? user.phone.replace(/[^\d]/g, '') : '';
+    const newPhoneNumbers = data.phone ? data.phone.replace(/[^\d]/g, '') : '';
+    const hasChanges = (newPhoneNumbers && newPhoneNumbers !== currentPhoneNumbers);
     
     if (!hasChanges) {
       alert('변경된 정보가 없습니다.');
@@ -74,12 +75,20 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
     if (!pendingFormData) return;
 
     try {
-      // API 요청 데이터 준비
+      // API 요청 데이터 준비 (전화번호만)
+      const currentPhoneNumbers = user?.phone ? user.phone.replace(/[^\d]/g, '') : '';
+      const newPhoneNumbers = pendingFormData.phone ? pendingFormData.phone.replace(/[^\d]/g, '') : '';
+      
       const updateData = {
         currentPassword: pendingFormData.currentPassword,
-        ...(pendingFormData.email && pendingFormData.email !== user?.email && { email: pendingFormData.email }),
-        ...(pendingFormData.phone && pendingFormData.phone !== user?.phone && { phone: pendingFormData.phone }),
+        ...(newPhoneNumbers && newPhoneNumbers !== currentPhoneNumbers && { 
+          phone: newPhoneNumbers // 하이픈 제거하고 숫자만 전송
+        }),
       };
+
+      console.log('전송할 전화번호 (원본):', pendingFormData.phone);
+      console.log('전송할 전화번호 (변환):', pendingFormData.phone?.replace(/[^\d]/g, ''));
+      console.log('API 요청 데이터:', updateData);
 
       const response = await updateSensitiveProfile(updateData);
       
@@ -220,27 +229,43 @@ const SensitiveProfileEditModal: React.FC<SensitiveProfileEditModalProps> = ({
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                   전화번호
                 </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  {...register('phone', {
-                    validate: (value) => {
-                      if (!value) return true; // 선택사항이므로 빈 값 허용
-                      const validation = validatePhone(value);
-                      return validation.isValid || validation.message;
-                    },
-                  })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-blue-500 text-sm ${
-                    errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                  placeholder="010-1234-5678 형식으로 입력해주세요"
-                />
+                <div className="relative">
+                  <input
+                    type="tel"
+                    id="phone"
+                    {...register('phone', {
+                      validate: (value) => {
+                        if (!value) return true; // 선택사항이므로 빈 값 허용
+                        const validation = validatePhone(value);
+                        return validation.isValid || validation.message;
+                      },
+                      onChange: (e) => {
+                        // 자동 포맷팅 적용
+                        const formatted = formatPhoneNumber(e.target.value);
+                        setValue('phone', formatted);
+                      },
+                    })}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:border-blue-500 text-sm ${
+                      errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                    placeholder="전화번호를 입력하세요 (자동으로 하이픈 추가됩니다)"
+                    maxLength={13} // 최대 길이 (하이픈 포함)
+                  />
+                  {/* 전화번호 아이콘 */}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                </div>
                 {errors.phone && (
                   <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  현재 전화번호: {user?.phone || '설정되지 않음'}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-gray-500">
+                    현재 전화번호: {user?.phone ? formatPhoneNumber(user.phone) : '설정되지 않음'}
+                  </p>
+                </div>
               </div>
             </div>
 

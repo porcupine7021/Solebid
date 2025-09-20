@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../user/hooks/useAuth';
-import { updateProfile, validateNickname, validateName, transformProfileFormData } from '../services/ProfileUpdateService';
+import { updateProfile, validateNickname, validateName, transformProfileFormData, formatPhoneNumber } from '../services/ProfileUpdateService';
 import type { ProfileFormData } from '../types/ProfileUpdateTypes';
 
 interface ProfileEditModalProps {
@@ -150,7 +150,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ open, onClose, onSu
               <input
                 type="tel"
                 id="phone"
-                value={user?.phone || ''}
+                value={user?.phone ? formatPhoneNumber(user.phone) : ''}
                 readOnly
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-500"
                 placeholder="전화번호 정보 없음"
