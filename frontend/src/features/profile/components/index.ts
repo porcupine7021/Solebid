@@ -6,3 +6,6 @@ export { default as ProfileTransaction } from './ProfileTransaction';
 export { default as ProfileAccount } from './ProfileAccount';
 export { default as TemperatureCard } from './TemperatureCard';
 export { default as ProfileEditModal } from './ProfileEditModal';
+
+export { default as SecurityConfirmDialog } from './SecurityConfirmDialog';
+export { default as PasswordStrengthIndicator } from './PasswordStrengthIndicator';
