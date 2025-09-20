@@ -17,7 +17,6 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ open, onClose, onSu
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
     setValue,
   } = useForm<ProfileFormData>({
     defaultValues: {
@@ -27,21 +26,23 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ open, onClose, onSu
     },
   });
 
-  // 모달이 열릴 때 현재 사용자 정보로 폼 초기화
+  // 모달이 열릴 때 사용자 정보로 폼 초기화
   useEffect(() => {
     if (open && user) {
+      console.log('ProfileEditModal: 사용자 정보로 폼 초기화', { 
+        nickname: user.nickname, 
+        name: user.name, 
+        phone: user.phone 
+      });
+      
+      // setValue를 사용하여 각 필드를 개별적으로 설정
       setValue('nickname', user.nickname || '');
       setValue('name', user.name || '');
       setValue('phone', user.phone || '');
     }
   }, [open, user, setValue]);
 
-  // 모달이 닫힐 때 폼 리셋
-  useEffect(() => {
-    if (!open) {
-      reset();
-    }
-  }, [open, reset]);
+  // 모달이 닫힐 때는 별도 리셋 불필요 (다음에 열릴 때 자동으로 사용자 정보로 초기화됨)
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -74,7 +75,6 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ open, onClose, onSu
   };
 
   const handleCancel = () => {
-    reset();
     onClose();
   };
 

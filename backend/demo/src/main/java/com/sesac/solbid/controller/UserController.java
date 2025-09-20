@@ -106,6 +106,8 @@ public class UserController {
             userData.put("userId", responseDto.userId());
             userData.put("email", responseDto.email());
             userData.put("nickname", responseDto.nickname());
+            userData.put("name", responseDto.name()); // 이름 필드 추가
+            userData.put("phone", responseDto.phone()); // 전화번호 필드도 추가
             userData.put("userType", responseDto.userType());
 
             return ResponseEntity.ok(ApiResponse.success(userData));
@@ -406,6 +408,8 @@ public class UserController {
             data.put("userId", user.getUserId());
             data.put("email", user.getEmail());
             data.put("nickname", user.getNickname());
+            data.put("name", user.getName()); // 이름 필드 추가
+            data.put("phone", user.getPhone()); // 전화번호 필드도 추가
             data.put("userType", user.getUserType() != null ? user.getUserType().name() : null);
             data.put("temperature", user.getTemperature());
             // 연결된 소셜 제공자 정보 포함 (있을 경우)
@@ -537,6 +541,8 @@ public class UserController {
             data.put("userId", user.getUserId());
             data.put("email", user.getEmail());
             data.put("nickname", user.getNickname());
+            data.put("name", user.getName()); // 이름 필드 추가
+            data.put("phone", user.getPhone()); // 전화번호 필드도 추가
             data.put("userType", user.getUserType() != null ? user.getUserType().name() : null);
             data.put("temperature", user.getTemperature());
             return ResponseEntity.ok(ApiResponse.success(data, "계정이 재활성화되었습니다."));
