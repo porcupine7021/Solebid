@@ -129,6 +129,83 @@ public class UserService {
         return user;
     }
 
+    // 이메일 기준으로 일반 프로필 업데이트 (닉네임, 이름만)
+    @Transactional
+    public User updateProfileForEmail(String email, String newNickname, String newName) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+
+        // 닉네임이 변경되는 경우 중복 확인
+        if (newNickname != null && !newNickname.equals(user.getNickname())) {
+            if (!isNicknameAvailable(newNickname)) {
+                throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
+            }
+        }
+
+        user.updateBasicProfile(newNickname, newName);
+        return user;
+    }
+
+    // 이메일 기준으로 민감한 프로필 업데이트 (스텝업 인증 필요)
+    @Transactional
+    public User updateSensitiveProfileForEmail(String email, String currentPassword, String newEmail, String newPhone) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+
+        // 현재 비밀번호 검증 (스텝업 인증)
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.LOGIN_FAILED);
+        }
+
+        // 이메일이 변경되는 경우 중복 확인
+        if (newEmail != null && !newEmail.equals(user.getEmail())) {
+            if (userRepository.findByEmail(newEmail).isPresent()) {
+                throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+            }
+        }
+
+        // 전화번호가 변경되는 경우 중복 확인
+        if (newPhone != null && !newPhone.equals(user.getPhone())) {
+            if (userRepository.findByPhone(newPhone).isPresent()) {
+                throw new CustomException(ErrorCode.DUPLICATE_PHONE);
+            }
+        }
+
+        user.updateSensitiveProfile(newEmail, newPhone);
+        return user;
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public User changePasswordForEmail(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+
+        // 현재 비밀번호 검증
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.LOGIN_FAILED);
+        }
+
+        // 새 비밀번호가 현재 비밀번호와 동일한지 확인
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.PASSWORD_RESET_SAME_AS_OLD);
+        }
+
+        // 새 비밀번호 암호화 및 업데이트
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        user.updatePassword(encodedNewPassword);
+
+        return user;
+    }
+
+    // 현재 비밀번호 검증 (스텝업 인증용)
+    public boolean validateCurrentPassword(String email, String currentPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
+
+        return passwordEncoder.matches(currentPassword, user.getPassword());
+    }
+
     @Transactional
     public User saveOrUpdate(String providerName, Map<String, Object> userAttributes) {
         // Provider 이름을 적절한 형태로 변환 (첫 글자만 대문자)

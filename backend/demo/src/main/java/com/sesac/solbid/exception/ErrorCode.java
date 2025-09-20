@@ -16,6 +16,7 @@ public enum ErrorCode {
     // 회원 가입 에러
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "이미 사용 중인 이메일 주소입니다."),
     DUPLICATE_NICKNAME(HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다."),
+    DUPLICATE_PHONE(HttpStatus.BAD_REQUEST, "이미 사용 중인 전화번호입니다."),
 
     // 로그인 에러
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),

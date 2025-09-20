@@ -6,9 +6,14 @@ import com.sesac.solbid.dto.ApiResponse;
 import com.sesac.solbid.dto.user.request.SignupRequest;
 import com.sesac.solbid.dto.user.request.LoginRequest;
 import com.sesac.solbid.dto.user.request.NicknameUpdateRequest;
+import com.sesac.solbid.dto.user.request.ProfileUpdateRequest;
+import com.sesac.solbid.dto.user.request.SensitiveProfileUpdateRequest;
+import com.sesac.solbid.dto.user.request.PasswordChangeRequest;
 import com.sesac.solbid.dto.user.response.SignupResponse;
 import com.sesac.solbid.dto.user.response.LoginResponse;
 import com.sesac.solbid.dto.user.response.NicknameAvailabilityResponse;
+import com.sesac.solbid.dto.user.response.ProfileUpdateResponse;
+import com.sesac.solbid.dto.user.response.PasswordChangeResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ReactivationRequiredException;
 import com.sesac.solbid.repository.SocialLoginRepository;
@@ -195,6 +200,181 @@ public class UserController {
         data.put("nickname", updated.getNickname());
 
         return ResponseEntity.ok(ApiResponse.success(data, "닉네임이 설정되었습니다."));
+    }
+
+    /**
+     * 현재 사용자 일반 프로필 업데이트
+     * <p>
+     * 로그인한 사용자의 일반적인 프로필 정보(닉네임, 이름)를 업데이트합니다. 
+     * JWT 토큰 인증이 필요하며, 추가 인증은 필요하지 않습니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 프로필 업데이트 요청 정보
+     * @return 프로필 업데이트 결과 및 업데이트된 사용자 정보
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ProfileUpdateResponse>> updateProfile(
+            HttpServletRequest request,
+            @Valid @RequestBody ProfileUpdateRequest body) {
+        Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
+        if (accessTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다."));
+        }
+        
+        String email;
+        try {
+            String token = accessTokenOpt.get();
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+            }
+            email = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+        }
+        
+        try {
+            User updatedUser = userService.updateProfileForEmail(email, body.nickname(), body.name());
+            ProfileUpdateResponse responseDto = ProfileUpdateResponse.from(updatedUser);
+            
+            return ResponseEntity.ok(ApiResponse.success(responseDto, "프로필이 성공적으로 업데이트되었습니다."));
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("프로필 업데이트 처리 중 예외", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 현재 사용자 민감한 프로필 정보 업데이트 (스텝업 인증)
+     * <p>
+     * 로그인한 사용자의 민감한 정보(이메일, 전화번호)를 업데이트합니다.
+     * JWT 토큰 인증과 함께 현재 비밀번호 확인이 필요합니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 민감한 프로필 업데이트 요청 정보
+     * @return 프로필 업데이트 결과 및 업데이트된 사용자 정보
+     */
+    @PutMapping("/profile/sensitive")
+    public ResponseEntity<ApiResponse<ProfileUpdateResponse>> updateSensitiveProfile(
+            HttpServletRequest request,
+            @Valid @RequestBody SensitiveProfileUpdateRequest body) {
+        Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
+        if (accessTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다."));
+        }
+        
+        String email;
+        try {
+            String token = accessTokenOpt.get();
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+            }
+            email = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+        }
+        
+        // 업데이트할 필드가 있는지 확인
+        if (!body.hasUpdates()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "업데이트할 정보가 없습니다."));
+        }
+        
+        try {
+            User updatedUser = userService.updateSensitiveProfileForEmail(
+                email, body.currentPassword(), body.email(), body.phone());
+            ProfileUpdateResponse responseDto = ProfileUpdateResponse.from(updatedUser);
+            
+            return ResponseEntity.ok(ApiResponse.success(responseDto, 
+                "민감한 정보가 성공적으로 업데이트되었습니다."));
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("민감한 프로필 업데이트 처리 중 예외", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 현재 사용자 비밀번호 변경
+     * <p>
+     * 로그인한 사용자의 비밀번호를 변경합니다.
+     * JWT 토큰 인증과 함께 현재 비밀번호 확인이 필요합니다.
+     * 비밀번호 변경 성공 시 모든 기존 세션이 무효화됩니다.
+     * </p>
+     * 
+     * @param request HTTP 요청 (JWT 토큰 쿠키 포함)
+     * @param body 비밀번호 변경 요청 정보
+     * @param response HTTP 응답 (세션 무효화용)
+     * @return 비밀번호 변경 결과
+     */
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<PasswordChangeResponse>> changePassword(
+            HttpServletRequest request,
+            @Valid @RequestBody PasswordChangeRequest body,
+            HttpServletResponse response) {
+        Optional<String> accessTokenOpt = getCookieValue(request, "accessToken");
+        if (accessTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다."));
+        }
+        
+        String email;
+        try {
+            String token = accessTokenOpt.get();
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+            }
+            email = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("UNAUTHORIZED", "유효하지 않은 토큰입니다."));
+        }
+        
+        // 새 비밀번호와 확인 비밀번호 일치 확인
+        if (!body.isPasswordMatching()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("INVALID_INPUT_VALUE", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다."));
+        }
+        
+        // 현재 비밀번호와 새 비밀번호 동일 여부 확인
+        if (body.isSameAsCurrentPassword()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("PASSWORD_RESET_SAME_AS_OLD", "새 비밀번호는 현재 비밀번호와 달라야 합니다."));
+        }
+        
+        try {
+            userService.changePasswordForEmail(email, body.currentPassword(), body.newPassword());
+            
+            // 보안을 위해 모든 토큰 쿠키 삭제 (강제 로그아웃)
+            cookieUtil.clearTokenCookies(response);
+            
+            PasswordChangeResponse responseDto = PasswordChangeResponse.success();
+            
+            return ResponseEntity.ok(ApiResponse.success(responseDto, 
+                "비밀번호가 변경되었습니다. 보안을 위해 다시 로그인해주세요."));
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.error(e.getErrorCode().name(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("비밀번호 변경 처리 중 예외", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."));
+        }
     }
 
     /**
