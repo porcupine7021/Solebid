@@ -21,8 +21,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -32,14 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
     private final ObjectMapper objectMapper;
-
-    // 이메일 인증이 필요한 엔드포인트 패턴들
-    private final List<String> emailVerificationRequiredPaths = Arrays.asList(
-        "/api/users/profile",
-        "/api/products",
-        "/api/auctions",
-        "/api/points"
-    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -58,10 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         throw new DisabledException("User is not active");
                     }
 
-                    // 이메일 인증 확인 (특정 엔드포인트에서만)
-                    if (requiresEmailVerification(request.getRequestURI())) {
+                    // 이메일 인증 확인 (특정 엔드포인트 + 메서드)
+                    if (requiresEmailVerification(request.getRequestURI(), request.getMethod())) {
                         User user = userService.getByEmail(username);
-                        // 소셜 로그인 사용자(password가 null)는 이메일 인증 제외
+                        // 소셜 로그인 사용자(password == null)는 이메일 인증 제외
                         if (user.getPassword() != null && !user.getEmailVerified()) {
                             sendErrorResponse(response, ErrorCode.EMAIL_NOT_VERIFIED);
                             return;
@@ -69,7 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
@@ -93,16 +87,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private boolean requiresEmailVerification(String requestURI) {
-        return emailVerificationRequiredPaths.stream()
-                .anyMatch(requestURI::startsWith);
+    /**
+     * 특정 엔드포인트 + 메서드에만 이메일 인증을 강제
+     */
+    private boolean requiresEmailVerification(String requestURI, String method) {
+        // 상품 등록만 인증 강제
+        if (requestURI.startsWith("/api/products") && "POST".equals(method)) {
+            return true;
+        }
+        if (requestURI.startsWith("/api/auctions")) return true;
+        if (requestURI.startsWith("/api/points")) return true;
+        if (requestURI.startsWith("/api/users/profile")) return true;
+        return false;
     }
 
     private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getStatus().value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         ApiResponse<Object> apiResponse = ApiResponse.error(errorCode.name(), errorCode.getMessage());
         String jsonResponse = objectMapper.writeValueAsString(apiResponse);
         response.getWriter().write(jsonResponse);

@@ -3,6 +3,7 @@ package com.sesac.solbid.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -57,6 +58,15 @@ public class SecurityConfig {
                                 "/api/auth/password/verify-otp",
                                 "/api/auth/password/verify-and-reset",
                                 "/api/auth/password/resend-otp"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/products"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET, "/api/products/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST, "/api/uploads/download-urls"
                         ).permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
