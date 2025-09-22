@@ -1,7 +1,7 @@
 import { createBrowserRouter, createRoutesFromElements, Route } from 'react-router-dom';
 
-import AuctionPage from './features/auction/pages/AuctionPage';
 import AuctionDetailPage from './features/auction/pages/AuctionDetailPage';
+import AuctionPage from './features/auction/pages/AuctionPage';
 import CartPage from './features/cart/pages/CartPage';
 import CategoryPage from './features/category/pages/CategoryPage';
 import MainPage from './features/main/pages/MainPage';
@@ -9,22 +9,22 @@ import NotificationPage from './features/nofitication/pages/NotificationPage';
 import OrderDetailPage from './features/order/pages/OrderDetailPage';
 import OrderPage from "./features/order/pages/OrderPage";
 import PolicyPage from './features/policy/pages/PolicyPage';
+
 import ProfilePage from './features/profile/pages/ProfilePage';
 import SearchPage from './features/search/pages/SearchPage';
 import SettingPage from './features/setting/pages/SettingPage';
-import TransactionDetailPage from './features/transaction/pages/TransactionDetailPage';
 import TransactionPage from './features/transaction/pages/TransactionPage';
 import WishPage from './features/wish/pages/WishPage';
 
+import EmailVerificationPage from './features/user/pages/EmailVerificationPage';
+import EmailVerificationSuccess from './features/user/pages/EmailVerificationSuccess';
+import FindPassword from './features/user/pages/FindPassword';
 import Login from "./features/user/pages/Login.tsx";
 import NicknameSetup from "./features/user/pages/NicknameSetup.tsx";
 import OAuth2Callback from "./features/user/pages/OAuth2Callback.tsx";
-import Signup from "./features/user/pages/Signup.tsx";
-import FindPassword from './features/user/pages/FindPassword';
 import PasswordResetOtp from './features/user/pages/PasswordResetOtp';
 import PasswordResetSuccess from './features/user/pages/PasswordResetSuccess';
-import EmailVerificationPage from './features/user/pages/EmailVerificationPage';
-import EmailVerificationSuccess from './features/user/pages/EmailVerificationSuccess';
+import Signup from "./features/user/pages/Signup.tsx";
 
 import AppLayout from "./components/AppLayout.tsx";
 import ProtectedRoute from './features/user/components/ProtectedRoute';
@@ -59,7 +59,6 @@ const router = createBrowserRouter(
             <Route path="/notification" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
             <Route path="/setting" element={<ProtectedRoute><SettingPage /></ProtectedRoute>} />
             <Route path="/transaction" element={<ProtectedRoute><TransactionPage /></ProtectedRoute>} />
-            <Route path="/transaction/:orderId" element={<ProtectedRoute><TransactionDetailPage /></ProtectedRoute>} />
             <Route path="/find-password" element={<FindPassword />} />
             <Route path="/password-reset-otp" element={<PasswordResetOtp />} />
             <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
