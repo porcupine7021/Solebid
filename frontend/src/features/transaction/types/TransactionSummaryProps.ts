@@ -1,5 +1,5 @@
-import type { Transaction } from "./Transaction";
+import type { ProfileBidSellingProps } from "../../profile/types/ProfileBidSellingProps";
 
 export interface TransactionSummaryProps {
-    data: Transaction[];
+    data: (ProfileBidSellingProps & { imageUrl: string })[];
 }

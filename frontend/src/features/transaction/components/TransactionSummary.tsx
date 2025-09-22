@@ -1,18 +1,18 @@
 import { useMemo } from "react";
+import { formatPrice } from "../../../utils/bid-utils";
 import type { TransactionSummaryProps } from "../types/TransactionSummaryProps";
 
 const TransactionSummary = ({ data }: TransactionSummaryProps) => {
     const summary = useMemo(() => {
         const totalCount = data.length;
-        const completedCount = data.filter(item => item.status === 'completed').length;
-        const shippingCount = data.filter(item => item.status === 'shipping').length;
-        const totalAmount = data.reduce((sum, item) => sum + item.price, 0);
+        const completedCount = data.length; // 모든 데이터가 판매 완료된 상품
+        const totalAmount = data.reduce((sum, item) => sum + item.soldPrice, 0);
 
-        return { totalCount, completedCount, shippingCount, totalAmount };
+        return { totalCount, completedCount, totalAmount };
     }, [data]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow-sm p-6 text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-1">
                     {summary.totalCount}
@@ -30,16 +30,8 @@ const TransactionSummary = ({ data }: TransactionSummaryProps) => {
                 </div>
             </div>
             <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-                <div className="text-2xl font-bold text-blue-600 mb-1">
-                    {summary.shippingCount}
-                </div>
-                <div className="text-gray-600 text-sm">
-                    배송중
-                </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center">
                 <div className="text-2xl font-bold text-purple-600 mb-1">
-                    ₩{summary.totalAmount.toLocaleString()}
+                    {formatPrice(summary.totalAmount)}
                 </div>
                 <div className="text-gray-600 text-sm">
                     총 판매 금액

@@ -2,15 +2,15 @@ import { convertToBidItemProps } from "../../../utils/bid-utils";
 import { useProfileBidWinning } from "../hooks/useProfileBidWinning";
 import { useImageUrls } from "../../../hooks/useProductImageUrls";
 import ProfileBidItem from "./ProfileBidItem";
-import { ProfileBidEmpty, ProfileBidError, ProfileBidLoading } from "./ProfileBidStates";
-import ProfileBidSection from "./ProfileBidSection";
+import { ProfileBidEmpty, ProfileBidError, ProfileBidLoading } from "./ProfileStates";
+import ProfileBidSection from "./ProfileSection";
 
 const TITLE = "최근 낙찰 내역";
 const MAX_DISPLAY_COUNT = 3;
 
 const ProfileBid = () => {
     const { winningBids, loading, error } = useProfileBidWinning();
-    
+
     // 기본 추출 함수 사용 (productImageUrl 필드를 자동으로 찾음)
     const { itemsWithImages: bidsWithImages, isLoadingImages } = useImageUrls(winningBids);
 

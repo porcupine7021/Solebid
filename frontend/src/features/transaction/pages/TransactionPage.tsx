@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { useImageUrls } from "../../../hooks/useProductImageUrls";
+import { useProfileBidSelling } from "../../profile/hooks/useProfileBidSelling";
+import type { ProfileBidSellingProps } from "../../profile/types/ProfileBidSellingProps";
 import { TransactionList, TransactionSearch, TransactionSummary } from "../components";
-import { transactionData } from "../components/mockData";
-import type { Transaction } from "../types/Transaction";
 
 const TransactionPage = () => {
     const [selectedDateFilter, setSelectedDateFilter] = useState("all");
@@ -10,21 +11,30 @@ const TransactionPage = () => {
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
+    // 실제 판매 내역 데이터 가져오기
+    const { soldProducts, loading, error } = useProfileBidSelling();
+    const { itemsWithImages: productsWithImages, isLoadingImages } = useImageUrls(
+        soldProducts,
+        (item) => item.productImageUrl
+    );
+
     const filteredData = useMemo(() => {
+        if (!productsWithImages.length) return [];
+
         const now = new Date();
         const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
         const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
         const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
 
-        return transactionData.filter((item: Transaction) => {
-            const matchesSearch = item.name
+        return productsWithImages.filter((item: ProfileBidSellingProps & { imageUrl: string }) => {
+            const matchesSearch = item.productName
                 .toLowerCase()
                 .includes(searchQuery.toLowerCase());
 
-            const matchesStatus =
-                selectedStatusFilter === "all" || item.status === selectedStatusFilter;
+            // 판매 완료된 상품이므로 상태 필터는 모두 "완료"로 처리
+            const matchesStatus = selectedStatusFilter === "all" || selectedStatusFilter === "completed";
 
-            const itemDate = new Date(item.saleDate);
+            const itemDate = new Date(item.soldDate);
 
             let matchesDate = true;
 
@@ -45,7 +55,28 @@ const TransactionPage = () => {
 
             return matchesSearch && matchesStatus && matchesDate;
         });
-    }, [searchQuery, selectedStatusFilter, selectedDateFilter]);
+    }, [productsWithImages, searchQuery, selectedStatusFilter, selectedDateFilter]);
+
+    if (loading || isLoadingImages) {
+        return (
+            <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center">
+                <i className="fas fa-spinner fa-spin fa-3x"></i>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">오류가 발생했습니다</h2>
+                        <p className="text-gray-600">{error}</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -68,17 +99,6 @@ const TransactionPage = () => {
                 <TransactionList
                     data={filteredData}
                 />
-                {filteredData.length > 0 && (
-                    <div className="text-center mt-8">
-                        <button
-                            onClick={() => { }}
-                            className="px-6 py-3 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 cursor-pointer !rounded-button whitespace-nowrap"
-                        >
-                            <i className="fas fa-plus mr-2" />
-                            더 많은 판매 내역 보기
-                        </button>
-                    </div>
-                )}
             </main>
         </div>
     );

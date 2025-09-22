@@ -14,7 +14,7 @@ const TransactionList = ({ data }: TransactionListProps) => {
                     ? (
                         data.map((item) =>
                             <TransactionItem
-                                key={item.id}
+                                key={item.productId}
                                 item={item}
                             />
                         )
