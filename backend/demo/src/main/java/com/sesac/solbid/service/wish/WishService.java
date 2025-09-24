@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface WishService {
 
-    void addWish(Long userId, Long productId);
+    WishActionResponse addWish(Long userId, Long productId);
 
-    void removeWish(Long userId, Long productId);
+    WishActionResponse removeWish(Long userId, Long productId);
 
-    List<ProductResponse> getWishes(Long userId);
+    List<WishResponse> getWishes(Long userId);
 }
