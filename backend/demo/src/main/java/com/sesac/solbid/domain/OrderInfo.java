@@ -5,7 +5,6 @@ import com.sesac.solbid.domain.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_info")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderInfo {
 
