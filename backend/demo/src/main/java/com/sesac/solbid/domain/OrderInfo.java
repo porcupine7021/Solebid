@@ -5,11 +5,13 @@ import com.sesac.solbid.domain.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
 @Table(name = "order_info")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -60,15 +62,18 @@ public class OrderInfo {
 
     @Builder
     public OrderInfo(AuctionEvent auctionEvent, User winner, User seller, BigDecimal finalPrice,
-            String deliveryAddress) {
+                     PaymentStatus paymentStatus, String deliveryAddress, DeliveryStatus deliveryStatus ) {
         this.auctionEvent = auctionEvent;
         this.winner = winner;
         this.seller = seller;
         this.finalPrice = finalPrice;
-        this.paymentStatus = PaymentStatus.WAITING;
-        this.deliveryStatus = DeliveryStatus.PREPARING;
+        this.paymentStatus = paymentStatus;
+        this.deliveryStatus = deliveryStatus;
         this.deliveryAddress = deliveryAddress;
         this.orderDate = LocalDateTime.now();
+        this.paymentDate = LocalDateTime.now();
+
+
     }
 
     public void markAsPaid() {
