@@ -1,15 +1,14 @@
 package com.sesac.solbid.service.wish;
 
-import java.util.List;
+import com.sesac.solbid.dto.product.response.ProductResponse;
 
-import com.sesac.solbid.dto.wish.response.WishActionResponse;
-import com.sesac.solbid.dto.wish.response.WishResponse;
+import java.util.List;
 
 public interface WishService {
 
-    WishActionResponse addWish(Long userId, Long productId);
+    void addWish(Long userId, Long productId);
 
-    WishActionResponse removeWish(Long userId, Long productId);
+    void removeWish(Long userId, Long productId);
 
-    List<WishResponse> getWishes(Long userId);
+    List<ProductResponse> getWishes(Long userId);
 }
