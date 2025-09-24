@@ -10,6 +10,7 @@ import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.repository.AuctionEventRepository;
 import com.sesac.solbid.repository.OrderInfoRepository;
 import com.sesac.solbid.service.point.PointService;
+import jakarta.persistence.criteria.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -56,7 +57,6 @@ public class AuctionSettlementServiceImpl implements AuctionSettlementService {
 
         // 자동 결제 (부족/오류 시 WAITING)
         PaymentStatus paymentStatus;
-        LocalDateTime paidAt = null;
         try {
             pointService.captureTx(
                     a.getHighestBidder().getUserId(),
@@ -65,7 +65,6 @@ public class AuctionSettlementServiceImpl implements AuctionSettlementService {
                     "경매 #" + a.getAuctionEventId() + " 낙찰 결제"
             );
             paymentStatus = PaymentStatus.SUCCESS;
-            paidAt = now;
         } catch (CustomException e) {
             log.warn("Auto-capture failed: auction={}, user={}, code={}, msg={}",
                     a.getAuctionEventId(), a.getHighestBidder().getUserId(), e.getErrorCode(), e.getMessage());
@@ -80,13 +79,10 @@ public class AuctionSettlementServiceImpl implements AuctionSettlementService {
         var order = OrderInfo.builder()
                 .auctionEvent(a)
                 .winner(a.getHighestBidder())
-                .seller(a.getSeller())
-                .finalPrice(a.getHighestBidAmount())
+                .seller(a.getSeller()).finalPrice(a.getHighestBidAmount())
                 .paymentStatus(paymentStatus)
                 .deliveryStatus(DeliveryStatus.PREPARING)
                 .deliveryAddress("TBD")
-                .orderDate(now)
-                .paymentDate(paidAt)
                 .build();
         try {
             orderRepo.save(order);
