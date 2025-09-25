@@ -42,9 +42,6 @@ public class Product extends BaseEntity {
     @OrderBy("sortOrder ASC") // 오름차순 정렬
     private final List<ProductImage> productImages = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product")
-    List<Wish> wish = new ArrayList<>();
-
     // 상품 메타
     @Enumerated(EnumType.STRING)
     @Column(name = "product_category", nullable = false)

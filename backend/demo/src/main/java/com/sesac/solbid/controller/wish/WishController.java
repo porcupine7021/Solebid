@@ -1,8 +1,8 @@
 package com.sesac.solbid.controller.wish;
 
 import com.sesac.solbid.domain.User;
-import com.sesac.solbid.dto.ApiResponse;
-import com.sesac.solbid.dto.product.response.ProductResponse;
+import com.sesac.solbid.dto.api.ApiResponse;
+import com.sesac.solbid.dto.wish.response.WishAuctionResponse;
 import com.sesac.solbid.exception.CustomException;
 import com.sesac.solbid.exception.ErrorCode;
 import com.sesac.solbid.service.wish.WishService;
@@ -12,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,31 +22,32 @@ public class WishController {
     private final WishService wishService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getWishes(@AuthenticationPrincipal User user) {
-        List<ProductResponse> wishes = Optional
-                .ofNullable(user)
-                .map(u -> wishService.getWishes(u.getUserId()))
-                .orElse(Collections.emptyList());
+    public ResponseEntity<ApiResponse<List<WishAuctionResponse>>> getWishes(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        List<WishAuctionResponse> wishes = wishService.getWishes(user.getUserId());
 
         return ResponseEntity.ok(ApiResponse.success(wishes));
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/{auctionEventId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addWish(@AuthenticationPrincipal User user, @PathVariable Long productId) {
+    public void addWish(@AuthenticationPrincipal User user, @PathVariable Long auctionEventId) {
         if (user == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
-        wishService.addWish(user.getUserId(), productId);
+        wishService.addWish(user.getUserId(), auctionEventId);
     }
 
-    @DeleteMapping("/{productId}")
+    @DeleteMapping("/{auctionEventId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeWish(@AuthenticationPrincipal User user,
-                           @PathVariable Long productId) {
+                           @PathVariable Long auctionEventId) {
         if (user == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
-        wishService.removeWish(user.getUserId(), productId);
+        wishService.removeWish(user.getUserId(), auctionEventId);
     }
 }

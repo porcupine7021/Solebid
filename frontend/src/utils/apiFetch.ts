@@ -8,6 +8,8 @@ export async function apiFetch<T = unknown>(input: string | URL | Request, init?
   }
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
 
+
+
   const res = await fetch(input, {
     ...init,
     headers,

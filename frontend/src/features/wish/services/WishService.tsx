@@ -6,10 +6,10 @@ export const getWishes = async (): Promise<ApiResponse<Wish[]>> => {
     return apiFetch<ApiResponse<Wish[]>>('/api/wishes');
 };
 
-export const addWish = async (productId: number): Promise<ApiResponse<void>> => {
-    return apiFetch<ApiResponse<void>>(`/api/wishes/${productId}`, {method: 'POST'});
+export const addWish = async (auctionEventId: number): Promise<ApiResponse<void>> => {
+    return apiFetch<ApiResponse<void>>(`/api/wishes/${auctionEventId}`, {method: 'POST'});
 };
 
-export const removeWish = async (productId: number): Promise<ApiResponse<void>> => {
-    return apiFetch<ApiResponse<void>>(`/api/wishes/${productId}`, {method: 'DELETE'});
+export const removeWish = async (auctionEventId: number): Promise<ApiResponse<void>> => {
+    return apiFetch<ApiResponse<void>>(`/api/wishes/${auctionEventId}`, {method: 'DELETE'});
 };
