@@ -9,16 +9,13 @@ import type { AuctionItem } from "../types/AuctionItem";
 const AuctionPage = () => {
     const navigate = useNavigate();
     const { data: cards, isLoading, isError, error } = useAuctionEventCards();
-    const { wishes, addWish, removeWish, isAdding, isRemoving } = useWishes();
-
-    const eventIdMap = useMemo(() => new Map(
-        (cards ?? []).map((card) => [card.productId, card.auctionEventId])
-    ), [cards]);
+    const { wishes, addWish, removeWish, pendingAddId, pendingRemoveId } = useWishes();
 
     const products = useMemo<AuctionItem[]>(() => (
         cards ?? []
     ).map((card) => ({
-        id: card.productId,
+        id: card.auctionEventId,
+        productId: card.productId,
         brand: card.brand,
         name: card.name,
         image: null,
@@ -99,12 +96,11 @@ const AuctionPage = () => {
                     items={filteredItems}
                     addWish={addWish}
                     removeWish={removeWish}
-                    isAdding={isAdding}
-                    isRemoving={isRemoving}
+                    pendingAddId={pendingAddId}
+                    pendingRemoveId={pendingRemoveId}
                     onBidClick={handleBidClick}
                     onSelect={(item) => {
-                        const targetId = eventIdMap.get(item.id) ?? item.id;
-                        navigate(`/auction/${targetId}`);
+                        navigate(`/auction/${item.id}`);
                     }}
                 />
             </main>

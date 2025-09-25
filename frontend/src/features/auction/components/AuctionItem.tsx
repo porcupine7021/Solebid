@@ -13,7 +13,7 @@ function formatRemaining(ms: number) {
         .join(':');
 }
 
-const AuctionItem = ({ item, addWish, removeWish, isAdding, isRemoving, onBidClick, onSelect }: AuctionItemProps) => {
+const AuctionItem = ({ item, addWish, removeWish, pendingAddId, pendingRemoveId, onBidClick, onSelect }: AuctionItemProps) => {
     const computeRemaining = useMemo(() => {
         const endTime = new Date(item.timeLeft).getTime();
         if (Number.isNaN(endTime)) return () => '-';
@@ -37,13 +37,13 @@ const AuctionItem = ({ item, addWish, removeWish, isAdding, isRemoving, onBidCli
 
     const currentBid = formatter.format(item.currentBid ?? 0);
 
-    const isLoading = isAdding || isRemoving;
+    const isProcessing = pendingAddId === item.id || pendingRemoveId === item.id;
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (isLoading) return;
+        if (isProcessing) return;
 
         if (item.isWished) {
             removeWish(item.id);

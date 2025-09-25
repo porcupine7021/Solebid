@@ -1,5 +1,6 @@
 export interface AuctionItem {
-    id: number;
+    id: number; // auctionEventId
+    productId: number;
     brand: string;
     name: string;
     image: string | null;

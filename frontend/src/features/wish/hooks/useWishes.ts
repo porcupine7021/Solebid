@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useProductImageUrls } from "../../../hooks/useProductImageUrls.ts";
 import type { ApiResponse } from '../../user/types/AuthTypes';
 import { addWish, getWishes, removeWish } from '../services/WishService.tsx';
@@ -20,11 +21,16 @@ export const useWishes = () => {
         initialWishes || []
     );
 
+    const [pendingAddId, setPendingAddId] = useState<number | null>(null);
+    const [pendingRemoveId, setPendingRemoveId] = useState<number | null>(null);
+
     const addWishMutation = useMutation({
         mutationFn: (newItem: Wish) => addWish(newItem.id),
 
         onMutate: async (newItem: Wish) => {
             await queryClient.cancelQueries({ queryKey: [WISHES_QUERY_KEY] });
+
+            setPendingAddId(newItem.id);
 
             const previousResponse = queryClient.getQueryData<ApiResponse<Wish[]>>([WISHES_QUERY_KEY]);
 
@@ -43,10 +49,12 @@ export const useWishes = () => {
             if (context?.previousResponse) {
                 queryClient.setQueryData([WISHES_QUERY_KEY], context.previousResponse);
             }
+            setPendingAddId(null);
         },
 
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: [WISHES_QUERY_KEY] });
+            setPendingAddId(null);
         },
     });
 
@@ -55,6 +63,8 @@ export const useWishes = () => {
 
         onMutate: async (removedId: number) => {
             await queryClient.cancelQueries({ queryKey: [WISHES_QUERY_KEY] });
+
+            setPendingRemoveId(removedId);
 
             const previousResponse = queryClient.getQueryData<ApiResponse<Wish[]>>([WISHES_QUERY_KEY]);
 
@@ -75,15 +85,17 @@ export const useWishes = () => {
             if (context?.previousResponse) {
                 queryClient.setQueryData([WISHES_QUERY_KEY], context.previousResponse);
             }
+            setPendingRemoveId(null);
         },
 
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: [WISHES_QUERY_KEY] });
+            setPendingRemoveId(null);
         },
     });
 
-    const isWished = (productId: number) => {
-        return wishes?.some(product => product.id === productId) ?? false;
+    const isWished = (auctionEventId: number) => {
+        return wishes?.some(product => product.id === auctionEventId) ?? false;
     };
 
     return {
@@ -93,7 +105,7 @@ export const useWishes = () => {
         addWish: addWishMutation.mutate,
         removeWish: removeWishMutation.mutate,
         isWished,
-        isAdding: addWishMutation.isPending,
-        isRemoving: removeWishMutation.isPending,
+        pendingAddId,
+        pendingRemoveId,
     };
 };
