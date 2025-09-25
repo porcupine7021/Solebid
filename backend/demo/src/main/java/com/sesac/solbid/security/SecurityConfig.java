@@ -31,6 +31,10 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 헬스체크 엔드포인트는 인증 없이 접근 허용 (Docker 헬스체크용) - 최우선 순위
+                        .requestMatchers(
+                                "/actuator/**"
+                        ).permitAll()
                         // 회원가입, 일반 로그인 API는 인증 없이 접근 허용
                         .requestMatchers(
                                 "/api/users/signup",
@@ -81,10 +85,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 오리진 설정
+        // 허용할 오리진 설정 (Docker 환경 포함)
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*", 
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "http://frontend:*",  // Docker 네트워크 내부 통신
+                "http://solebid-frontend:*"  // Docker 컨테이너명 기반 통신
         ));
         
         // 허용할 HTTP 메서드 설정

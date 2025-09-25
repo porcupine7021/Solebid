@@ -1,0 +1,81 @@
+# Prometheus 설정 파일 - Solebid 프로덕션 모니터링
+
+global:
+  scrape_interval: 15s      # 기본 스크래핑 간격
+  evaluation_interval: 15s  # 규칙 평가 간격
+  
+  # 외부 레이블 (Grafana 연동 시 사용)
+  external_labels:
+    monitor: 'solebid-monitor'
+    environment: 'production'
+
+# 규칙 파일 로드
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# 스크래핑 설정
+scrape_configs:
+  # Prometheus 자체 모니터링
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Spring Boot 백엔드 모니터링 (Actuator 사용)
+  - job_name: 'solebid-backend'
+    static_configs:
+      - targets: ['backend:8080']
+    scrape_interval: 30s
+    metrics_path: /actuator/prometheus
+    scrape_timeout: 10s
+    
+    # 헬스체크 실패 시에도 스크래핑 계속
+    honor_labels: true
+    
+    # 메트릭 재레이블링
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*'
+        target_label: service
+        replacement: 'backend'
+
+  # Redis 모니터링 (Redis Exporter 필요 시)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    
+    # Redis 메트릭 수집을 위한 추가 설정
+    params:
+      format: ['prometheus']
+
+  # Nginx/Frontend 모니터링 (nginx-prometheus-exporter 필요 시)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['frontend:80']
+    scrape_interval: 60s
+    metrics_path: /metrics
+
+  # Docker 컨테이너 모니터링 (cAdvisor 필요 시)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+# 알림 관리자 설정 (Alertmanager 사용 시)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# 원격 쓰기 설정 (장기 저장소 사용 시)
+# remote_write:
+#   - url: "http://remote-storage:8086/api/v1/prom/write?db=prometheus"
+
+# 원격 읽기 설정
+# remote_read:
+#   - url: "http://remote-storage:8086/api/v1/prom/read?db=prometheus"
