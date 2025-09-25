@@ -1,0 +1,111 @@
+# Solebid 프로젝트 Docker Compose 메인 설정 파일
+# 백엔드(Spring Boot), 프론트엔드(React), Redis 서비스를 통합 관리
+
+services:
+  backend:
+    build:
+      context: ./backend/demo
+      dockerfile: Dockerfile
+    container_name: solebid-backend
+    ports:
+      - "${DOCKER_BACKEND_PORT:-8080}:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker,redis}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TOKEN_VALIDITY=${JWT_ACCESS_TOKEN_VALIDITY:-3600}
+      - JWT_REFRESH_TOKEN_VALIDITY=${JWT_REFRESH_TOKEN_VALIDITY:-86400}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_REGION=${AWS_REGION:-ap-southeast-2}
+      - S3_BUCKET=${S3_BUCKET}
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_DEBUG=${MAIL_DEBUG:-false}
+      - GOOGLE_MAIL_REFRESH_TOKEN=${GOOGLE_MAIL_REFRESH_TOKEN}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:3000/auth/callback/google}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+      - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI:-http://localhost:3000/auth/callback/kakao}
+      - KAKAO_API_HOST=${KAKAO_API_HOST:-https://kapi.kakao.com}
+      - KAKAO_ADMIN_KEY=${KAKAO_ADMIN_KEY}
+      - PORTONE_BASE_URL=${PORTONE_BASE_URL:-https://api.iamport.kr}
+      - PORTONE_API_KEY=${PORTONE_API_KEY}
+      - PORTONE_API_SECRET=${PORTONE_API_SECRET}
+      - FRONTEND_BASE_URL=${FRONTEND_BASE_URL:-http://localhost:3000}
+      - SERVER_PORT=${SERVER_PORT:-8080}
+      - SECURITY_LOG_LEVEL=${SECURITY_LOG_LEVEL:-info}
+      - APP_LOG_LEVEL=${APP_LOG_LEVEL:-info}
+      - JPA_SHOW_SQL=${JPA_SHOW_SQL:-false}
+      - JPA_FORMAT_SQL=${JPA_FORMAT_SQL:-false}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - solebid-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/products || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: solebid-frontend
+    ports:
+      - "${DOCKER_FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - solebid-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: solebid-redis
+    ports:
+      - "${DOCKER_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - solebid-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  solebid-network:
+    driver: bridge
+    name: solebid-network
+
+volumes:
+  redis-data:
+    driver: local
+    name: solebid-redis-data
