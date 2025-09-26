@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useProductImageUrls } from "../../../hooks/useProductImageUrls.ts";
+import { useAuth } from "../../user/hooks/useAuth.ts";
 import type { ApiResponse } from '../../user/types/AuthTypes';
 import { addWish, getWishes, removeWish } from '../services/WishService.tsx';
 import type { Wish } from '../types/Wish';
@@ -9,12 +10,14 @@ const WISHES_QUERY_KEY = 'wishes';
 
 export const useWishes = () => {
     const queryClient = useQueryClient();
+    const { isAuthenticated } = useAuth();
 
     const { data: initialWishes, isLoading: isInitialLoading, error } = useQuery<ApiResponse<Wish[]>, Error, Wish[]>({ // 1. useQuery의 반환값을 initialWishes로 받음
         queryKey: [WISHES_QUERY_KEY],
         queryFn: getWishes,
         select: (data) => data.data ?? [],
         staleTime: 1000 * 60 * 5,
+        enabled: isAuthenticated,
     });
 
     const { productsWithImages: wishes, isLoadingImages } = useProductImageUrls(
@@ -99,8 +102,8 @@ export const useWishes = () => {
     };
 
     return {
-        wishes,
-        isLoading: isInitialLoading || isLoadingImages,
+        wishes: wishes ?? [],
+        isLoading: (isAuthenticated && isInitialLoading) || isLoadingImages,
         error,
         addWish: addWishMutation.mutate,
         removeWish: removeWishMutation.mutate,

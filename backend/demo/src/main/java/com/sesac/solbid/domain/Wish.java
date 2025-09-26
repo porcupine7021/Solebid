@@ -15,7 +15,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "wish", uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "auction_event_id"})})
+@Table(
+        name = "wish",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_wish_user_event",
+                        columnNames = {"user_id", "auction_event_id"}
+                )
+        }
+)
 public class Wish {
 
     @Id

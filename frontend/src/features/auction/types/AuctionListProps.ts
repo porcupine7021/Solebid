@@ -9,4 +9,5 @@ export interface AuctionListProps {
     removeWish: (id: number) => void;
     pendingAddId: number | null;
     pendingRemoveId: number | null;
+    canWish: boolean;
 }
