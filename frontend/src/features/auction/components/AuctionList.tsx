@@ -1,7 +1,7 @@
 import type { AuctionListProps } from "../types/AuctionListProps";
 import AuctionItem from "./AuctionItem";
 
-const AuctionList = ({ items, onBidClick, onSelect, addWish, removeWish, pendingAddId, pendingRemoveId }: AuctionListProps) => {
+const AuctionList = ({ items, onBidClick, onSelect, addWish, removeWish, pendingAddId, pendingRemoveId, canWish }: AuctionListProps) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map(item => (
@@ -12,6 +12,7 @@ const AuctionList = ({ items, onBidClick, onSelect, addWish, removeWish, pending
                     removeWish={removeWish}
                     pendingAddId={pendingAddId}
                     pendingRemoveId={pendingRemoveId}
+                    canWish={canWish}
                     onBidClick={onBidClick}
                     onSelect={onSelect}
                 />

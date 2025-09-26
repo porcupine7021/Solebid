@@ -42,7 +42,7 @@ public class WishServiceImpl implements WishService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = DataIntegrityViolationException.class)
     public void addWish(Long userId, Long auctionEventId) {
         // 멱등: 이미 존재하면 조용히 성공 처리
         if (wishRepository.existsByUser_UserIdAndAuctionEvent_AuctionEventId(userId, auctionEventId)) {
@@ -53,7 +53,7 @@ public class WishServiceImpl implements WishService {
         AuctionEvent event = auctionEventRepository.getReferenceById(auctionEventId);
 
         try {
-            wishRepository.save(Wish.builder()
+            wishRepository.saveAndFlush(Wish.builder()
                     .user(user)
                     .auctionEvent(event)
                     .build());

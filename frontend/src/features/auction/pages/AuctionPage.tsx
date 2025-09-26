@@ -1,15 +1,18 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useWishes } from "../../wish/hooks/useWishes.ts";
 import { AuctionList, AuctionModal, AuctionSearch } from "../components";
 import { categories, sortOptions } from "../components/mockData";
 import { useAuctionEventCards } from "../hooks/useAuctionEventCards.ts";
 import type { AuctionItem } from "../types/AuctionItem";
+import { useAuth } from "../../user/hooks/useAuth";
 
 const AuctionPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { data: cards, isLoading, isError, error } = useAuctionEventCards();
     const { wishes, addWish, removeWish, pendingAddId, pendingRemoveId } = useWishes();
+    const { isAuthenticated } = useAuth();
 
     const products = useMemo<AuctionItem[]>(() => (
         cards ?? []
@@ -26,10 +29,7 @@ const AuctionPage = () => {
         category: card.category,
     })), [cards]);
 
-    const wishedIds = useMemo(() => new Set(
-        wishes?.map(wish => wish.id) ?? []
-    ), [wishes]
-    );
+    const wishedIds = useMemo(() => new Set(wishes.map((wish) => wish.id)), [wishes]);
 
     const [selectedCategory, setSelectedCategory] = useState('전체');
     const [priceRange, setPriceRange] = useState([0, 1000000]);
@@ -38,10 +38,14 @@ const AuctionPage = () => {
     const [selectedItem, setSelectedItem] = useState<AuctionItem | null>(null);
 
     const processedItems = useMemo(() => {
-        return (products ?? []).map(item =>
-            ({ ...item, isWished: wishedIds.has(item.id) })
-        );
+        return (products ?? []).map(item => ({
+            ...item,
+            isWished: wishedIds.has(item.id),
+        }));
     }, [products, wishedIds]);
+
+    const handleAddWish = addWish;
+    const handleRemoveWish = removeWish;
 
     const filteredItems = useMemo(() => {
         return processedItems.filter(item => {
@@ -61,6 +65,14 @@ const AuctionPage = () => {
     }, [processedItems, selectedCategory, priceRange, sortOption]);
 
     const handleBidClick = (item: AuctionItem) => {
+        if (!isAuthenticated) {
+            const redirect = `/auction/${item.id}`;
+            navigate('/login', {
+                state: { from: redirect, fallback: location.pathname },
+            });
+            return;
+        }
+
         setSelectedItem(item);
         setIsModalOpen(true);
     };
@@ -94,10 +106,11 @@ const AuctionPage = () => {
                 />
                 <AuctionList
                     items={filteredItems}
-                    addWish={addWish}
-                    removeWish={removeWish}
+                    addWish={handleAddWish}
+                    removeWish={handleRemoveWish}
                     pendingAddId={pendingAddId}
                     pendingRemoveId={pendingRemoveId}
+                    canWish={isAuthenticated}
                     onBidClick={handleBidClick}
                     onSelect={(item) => {
                         navigate(`/auction/${item.id}`);

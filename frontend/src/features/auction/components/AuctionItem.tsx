@@ -13,7 +13,7 @@ function formatRemaining(ms: number) {
         .join(':');
 }
 
-const AuctionItem = ({ item, addWish, removeWish, pendingAddId, pendingRemoveId, onBidClick, onSelect }: AuctionItemProps) => {
+const AuctionItem = ({ item, addWish, removeWish, pendingAddId, pendingRemoveId, onBidClick, onSelect, canWish }: AuctionItemProps) => {
     const computeRemaining = useMemo(() => {
         const endTime = new Date(item.timeLeft).getTime();
         if (Number.isNaN(endTime)) return () => '-';
@@ -71,21 +71,24 @@ const AuctionItem = ({ item, addWish, removeWish, pendingAddId, pendingRemoveId,
                     alt={item.name}
                     className="w-full h-full object-cover"
                 />
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleClick(e);
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 cursor-pointer"
-                >
-                    <i className={
-                        `fas fa-heart text-sm 
+                {canWish && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClick(e);
+                        }}
+                        className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 cursor-pointer"
+                        aria-label={item.isWished ? '찜 해제' : '찜하기'}
+                    >
+                        <i className={
+                            `fas fa-heart text-sm 
                         ${item.isWished
-                            ? 'text-red-500'
-                            : 'text-gray-400'
-                        }`}
-                    />
-                </button>
+                                ? 'text-red-500'
+                                : 'text-gray-400'
+                            }`}
+                        />
+                    </button>
+                )}
             </div>
             <div className="p-6">
                 <div className="text-sm text-gray-500 mb-1">

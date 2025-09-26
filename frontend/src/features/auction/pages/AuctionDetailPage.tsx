@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuctionDetail } from "../hooks/useAuctionDetail";
 import { useAuctionStream } from "../hooks/useAuctionStream";
 import { AuctionsApi } from "../services/auctions";
 import { idemKey } from "../../../utils/idempotency";
 import { toImageUrl } from "../../../utils/toImageUrl";
 import type { AuctionStatus } from "../types/auctionDetail";
+import { useAuth } from "../../user/hooks/useAuth";
 
 const krw = (v: number | null | undefined) =>
     v == null
@@ -34,6 +35,9 @@ const diffHMS = (iso: string) => {
 const AuctionDetailPage: React.FC = () => {
     const { auctionId: idStr } = useParams<{ auctionId: string }>();
     const auctionId = useMemo(() => (idStr ? Number(idStr) : undefined), [idStr]);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { isAuthenticated } = useAuth();
 
     const { data, setData, loading, err } = useAuctionDetail(auctionId);
 
@@ -208,7 +212,19 @@ const AuctionDetailPage: React.FC = () => {
                             {/* 입찰 버튼 */}
                             <button
                                 disabled={data.status !== "LIVE" || clock.finished}
-                                onClick={() => setShowBidModal(true)}
+                                onClick={() => {
+                                    if (!isAuthenticated) {
+                                        const next = auctionId ? `/auction/${auctionId}` : location.pathname;
+                                        navigate("/login", {
+                                            state: {
+                                                from: next,
+                                                fallback: location.pathname,
+                                            },
+                                        });
+                                        return;
+                                    }
+                                    setShowBidModal(true);
+                                }}
                                 className={`w-full py-4 text-white text-lg font-semibold !rounded-button cursor-pointer whitespace-nowrap ${
                                     data.status !== "LIVE" || clock.finished ? "bg-gray-300" : "bg-blue-500 hover:bg-blue-600"
                                 }`}

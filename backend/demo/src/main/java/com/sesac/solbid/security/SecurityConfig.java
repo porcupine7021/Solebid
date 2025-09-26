@@ -70,6 +70,11 @@ public class SecurityConfig {
                                 HttpMethod.GET, "/api/products/**"
                         ).permitAll()
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/auctions/**",
+                                "/api/auction-events/**"
+                        ).permitAll()
+                        .requestMatchers(
                                 HttpMethod.POST, "/api/uploads/download-urls"
                         ).permitAll()
                         // 그 외 모든 요청은 인증 필요
